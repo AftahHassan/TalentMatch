@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AnalyseController;
+use App\Http\Controllers\CandidatureController;
 use App\Http\Controllers\OffreController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -26,11 +28,12 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    // Routes des candidatures (US5)
+    Route::get('/offres/{offre}/candidatures/create', [CandidatureController::class, 'create'])->name('candidatures.create');
+    Route::post('/offres/{offre}/candidatures', [CandidatureController::class, 'store'])->name('candidatures.store');
 });
 
 Route::middleware('auth')->group(function () {
-    // Routes des analyses (US7)
+    Route::get('/analyses/{analyse}', [AnalyseController::class, 'show'])->name('analyses.show');
 });
 
 require __DIR__.'/auth.php';

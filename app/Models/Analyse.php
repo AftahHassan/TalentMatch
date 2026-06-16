@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Recommandation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -34,7 +35,7 @@ class Analyse extends Model
             'lacunes' => 'array',
             'competences_manquantes' => 'array',
             'payload' => 'array',
-            'recommandation' => \App\Enums\Recommandation::class,
+            'recommandation' => Recommandation::class,
         ];
     }
 
