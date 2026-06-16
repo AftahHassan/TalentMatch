@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Offre;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -72,12 +73,12 @@ class OffreTest extends TestCase
         $user = User::factory()->create();
         $autreUser = User::factory()->create();
 
-        $offre = \App\Models\Offre::factory()->create([
+        $offre = Offre::factory()->create([
             'user_id' => $user->id,
             'titre' => 'Mon offre',
         ]);
 
-        \App\Models\Offre::factory()->create([
+        Offre::factory()->create([
             'user_id' => $autreUser->id,
             'titre' => 'Offre autre user',
         ]);
@@ -104,7 +105,7 @@ class OffreTest extends TestCase
         $user = User::factory()->create();
         $autreUser = User::factory()->create();
 
-        $offre = \App\Models\Offre::factory()->create([
+        $offre = Offre::factory()->create([
             'user_id' => $user->id,
         ]);
 

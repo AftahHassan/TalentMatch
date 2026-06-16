@@ -51,3 +51,9 @@ Le système SHALL permettre au propriétaire d'une offre de consulter le détail
 #### Scenario: Candidatures triées par score
 - **WHEN** le propriétaire consulte le détail d'une offre avec plusieurs candidatures
 - **THEN** les candidatures sont affichées triées par score décroissant
+
+#### Scenario: Badge de recommandation coloré
+- **WHEN** le propriétaire consulte le détail d'une offre avec des analyses terminées
+- **THEN** la recommandation `convoquer` est affichée en badge vert
+- **THEN** la recommandation `attente` est affichée en badge orange
+- **THEN** la recommandation `rejeter` est affichée en badge rouge
