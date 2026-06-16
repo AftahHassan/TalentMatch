@@ -425,7 +425,7 @@ features:
       Chaque appel à l'agent recharge l'historique complet de la conversation.
     acceptance_criteria:
       - Contexte maintenu entre les messages de la même conversation
-      - "Parle-moi de ses lacunes" fonctionne sans répéter le nom
+      - "Parle-moi de ses lacunes fonctionne sans répéter le nom"
       - Recharger la page conserve l'historique
       - Une conversation est liée à une analyse précise via analyse_id
 
