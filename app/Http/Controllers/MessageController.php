@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Ai\Agents\TalentMatchAgent;
 use App\Enums\MessageRole;
 use App\Models\Conversation;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Ai\Messages\AssistantMessage;
@@ -15,13 +15,15 @@ use function Laravel\Ai\agent;
 
 class MessageController extends Controller
 {
-    public function store(Request $request, Conversation $conversation): RedirectResponse
+    public function store(Request $request, Conversation $conversation): JsonResponse
     {
         Gate::authorize('view', $conversation->analyse);
 
         $validated = $request->validate([
             'contenu' => 'required|string',
         ]);
+
+        $conversation->load('analyse.offre');
 
         $userMessage = $validated['contenu'];
 
@@ -39,17 +41,35 @@ class MessageController extends Controller
             'contenu' => $userMessage,
         ]);
 
+        $analyse = $conversation->analyse;
+
+        $instructions = "Tu es TalentMatch, assistant RH expert.\n\n"
+            ."Contexte :\n"
+            ."- analyse_id : {$analyse->id}\n"
+            ."- offre_id : {$analyse->offre_id}\n\n"
+            .'Tu dois toujours utiliser un tool pour récupérer les données réelles avant de répondre. '
+            .'Ne jamais inventer un score, une compétence ou une recommandation. '
+            ."Si tu n'as pas l'ID, utilise les IDs fournis dans le contexte ci-dessus. "
+            .'Réponds en français.';
+
         $response = agent(
-            instructions: 'Tu es TalentMatch, assistant RH expert. Utilise toujours les tools pour répondre, ne jamais inventer de données. Réponds en français.',
+            instructions: $instructions,
             messages: $history,
             tools: [...(new TalentMatchAgent)->tools()],
         )->prompt($userMessage);
 
-        $conversation->messages()->create([
+        $message = $conversation->messages()->create([
             'role' => MessageRole::Assistant,
             'contenu' => $response->text,
         ]);
 
-        return redirect()->route('conversations.show', $conversation);
+        return response()->json([
+            'message' => [
+                'id' => $message->id,
+                'role' => $message->role->value,
+                'contenu' => $message->contenu,
+                'created_at' => $message->created_at->toISOString(),
+            ],
+        ]);
     }
 }
