@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Offre;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class OffreController extends Controller
 {
     public function index()
     {
-        //
+        $offres = request()->user()->offres()->latest()->get();
+
+        return view('offres.index', compact('offres'));
     }
 
     public function create()
@@ -40,6 +43,10 @@ class OffreController extends Controller
 
     public function show(Offre $offre)
     {
+        Gate::authorize('view', $offre);
+
+        $offre->load(['analyses.candidature']);
+
         return view('offres.show', compact('offre'));
     }
 

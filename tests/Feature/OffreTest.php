@@ -66,4 +66,50 @@ class OffreTest extends TestCase
 
         $response->assertSessionHasErrors('niveau_experience');
     }
+
+    public function test_un_utilisateur_connecte_voit_ses_offres(): void
+    {
+        $user = User::factory()->create();
+        $autreUser = User::factory()->create();
+
+        $offre = \App\Models\Offre::factory()->create([
+            'user_id' => $user->id,
+            'titre' => 'Mon offre',
+        ]);
+
+        \App\Models\Offre::factory()->create([
+            'user_id' => $autreUser->id,
+            'titre' => 'Offre autre user',
+        ]);
+
+        $response = $this->actingAs($user)->get('/offres');
+
+        $response->assertStatus(200);
+        $response->assertSee('Mon offre');
+        $response->assertDontSee('Offre autre user');
+    }
+
+    public function test_message_aucune_offre(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/offres');
+
+        $response->assertStatus(200);
+        $response->assertSee('Aucune offre');
+    }
+
+    public function test_un_utilisateur_non_proprietaire_ne_peut_pas_voir_une_offre(): void
+    {
+        $user = User::factory()->create();
+        $autreUser = User::factory()->create();
+
+        $offre = \App\Models\Offre::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($autreUser)->get("/offres/{$offre->id}");
+
+        $response->assertStatus(403);
+    }
 }
