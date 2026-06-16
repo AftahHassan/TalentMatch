@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OffreController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,9 +19,10 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/offres', function () {
-        return view('offres.index');
-    })->name('offres.index');
+    Route::get('/offres', [OffreController::class, 'index'])->name('offres.index');
+    Route::get('/offres/create', [OffreController::class, 'create'])->name('offres.create');
+    Route::post('/offres', [OffreController::class, 'store'])->name('offres.store');
+    Route::get('/offres/{offre}', [OffreController::class, 'show'])->name('offres.show');
 });
 
 Route::middleware('auth')->group(function () {

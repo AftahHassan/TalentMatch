@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('offres', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('titre');
+            $table->text('description');
+            $table->json('competences_requises');
+            $table->integer('niveau_experience');
             $table->timestamps();
         });
     }
