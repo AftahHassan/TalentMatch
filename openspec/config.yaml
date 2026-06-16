@@ -1,20 +1,479 @@
-schema: spec-driven
+project:
+  name: TalentMatch
+  description: >
+    Assistant IA de présélection RH. Permet à un agent RH de soumettre une offre
+    d'emploi et un CV, d'obtenir une analyse structurée (matching score, compétences,
+    lacunes, recommandation), puis de converser avec un agent IA qui se souvient du
+    contexte pour poser des questions de suivi.
+  stack:
+    framework: Laravel 13
+    php: "8.3"
+    auth: Laravel Breeze (Blade)
+    database: MySQL
+    testing: Pest PHP
+    ai_sdk: laravel/ai
+    tooling:
+      - laravel/boost (dev only — MCP server local)
+      - OpenSpec
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# ─────────────────────────────────────────────
+# MODÈLES DE DONNÉES
+# ─────────────────────────────────────────────
+models:
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  User:
+    table: users
+    description: Agent RH authentifié. Géré par Laravel Breeze.
+    fields:
+      id: bigIncrements
+      name: string
+      email: string (unique)
+      password: string (hashed)
+      remember_token: string (nullable)
+      timestamps: true
+    relationships:
+      - hasMany: Offre
+
+  Offre:
+    table: offres
+    description: Offre d'emploi créée par un agent RH.
+    fields:
+      id: bigIncrements
+      user_id: foreignId -> users (cascade delete)
+      titre: string
+      description: text
+      competences_requises: json        # ex: ["PHP", "Laravel", "MySQL"]
+      niveau_experience: integer        # en années
+      timestamps: true
+    relationships:
+      - belongsTo: User
+      - hasMany: Analyse
+    casts:
+      competences_requises: array
+
+  Candidature:
+    table: candidatures
+    description: >
+      CV soumis par un agent RH. Une candidature est liée à une seule analyse (1,1).
+    fields:
+      id: bigIncrements
+      nom: string
+      texte_cv: longText
+      timestamps: true
+    relationships:
+      - hasOne: Analyse
+
+  Analyse:
+    table: analyses
+    description: >
+      Résultat de l'analyse IA d'une candidature contre une offre.
+      Tous les champs JSON sont castés via Eloquent.
+      Le champ recommandation est un enum PHP.
+      Le champ statut indique l'état du job (en_attente / termine / echec).
+      Le champ payload stocke la réponse brute du SDK pour debug.
+    fields:
+      id: bigIncrements
+      offre_id: foreignId -> offres (cascade delete)
+      candidature_id: foreignId -> candidatures (cascade delete)
+      competences: json               # ["PHP", "Vue.js", ...]
+      annees_experience: integer
+      niveau_etude: string
+      langues: json                   # ["Français", "Anglais"]
+      score: integer                  # 0-100
+      points_forts: json              # ["Solide expérience Laravel", ...]
+      lacunes: json                   # ["Pas de CI/CD", ...]
+      competences_manquantes: json    # ["Docker", ...]
+      recommandation: enum('convoquer','attente','rejeter')
+      statut: string                  # en_attente | termine | echec
+      justification: text
+      payload: json                   # réponse brute SDK (nullable)
+      timestamps: true
+    relationships:
+      - belongsTo: Offre
+      - belongsTo: Candidature
+      - hasMany: Conversation
+    casts:
+      competences: array
+      langues: array
+      points_forts: array
+      lacunes: array
+      competences_manquantes: array
+      payload: array
+      recommandation: App\Enums\Recommandation
+
+  Conversation:
+    table: conversations
+    description: >
+      Session de chat entre le RH et l'agent IA, liée à une analyse précise.
+      Une conversation appartient à une analyse (N,1).
+    fields:
+      id: bigIncrements
+      analyse_id: foreignId -> analyses (cascade delete)
+      titre: string
+      timestamps: true
+    relationships:
+      - belongsTo: Analyse
+      - hasMany: Message
+
+  Message:
+    table: messages
+    description: >
+      Message individuel dans une conversation. Le role indique si c'est
+      l'utilisateur RH ou l'assistant IA qui a écrit.
+    fields:
+      id: bigIncrements
+      conversation_id: foreignId -> conversations (cascade delete)
+      role: enum('user','assistant')
+      contenu: text
+      timestamps: true
+    relationships:
+      - belongsTo: Conversation
+    casts:
+      role: App\Enums\MessageRole
+
+# ─────────────────────────────────────────────
+# ENUMS
+# ─────────────────────────────────────────────
+enums:
+  Recommandation:
+    namespace: App\Enums
+    cases:
+      - convoquer
+      - attente
+      - rejeter
+    backed_type: string
+
+  MessageRole:
+    namespace: App\Enums
+    cases:
+      - user
+      - assistant
+    backed_type: string
+
+# ─────────────────────────────────────────────
+# CARDINALITÉS
+# ─────────────────────────────────────────────
+cardinalities:
+  - "User      (1,N)  Offre        — un user crée plusieurs offres"
+  - "Offre     (1,N)  Analyse      — une offre reçoit plusieurs analyses"
+  - "Candidature (1,1) Analyse     — une candidature donne exactement une analyse"
+  - "Analyse   (1,N)  Conversation — une analyse peut avoir plusieurs sessions de chat"
+  - "Conversation (1,N) Message    — une conversation contient plusieurs messages"
+
+# ─────────────────────────────────────────────
+# CONTRAT JSON — STRUCTURED OUTPUT IA
+# ─────────────────────────────────────────────
+ai_output_schema:
+  description: >
+    Schéma JSON strict retourné par le SDK laravel/ai lors de l'analyse d'un CV.
+    Le SDK impose ce contrat — l'IA ne peut pas retourner autre chose.
+    Les noms de champs correspondent exactement aux colonnes de la table analyses.
+  schema:
+    competences:
+      type: array
+      items: string
+      description: Liste des compétences détectées dans le CV
+    annees_experience:
+      type: integer
+      description: Nombre d'années d'expérience professionnelle estimé
+    niveau_etude:
+      type: string
+      description: "Ex: Bac+5, Master, Licence, BTS..."
+    langues:
+      type: array
+      items: string
+      description: Langues maîtrisées détectées dans le CV
+    score:
+      type: integer
+      minimum: 0
+      maximum: 100
+      description: Score de correspondance avec l'offre (0 = aucun match, 100 = parfait)
+    points_forts:
+      type: array
+      items: string
+      description: Points forts du candidat par rapport à l'offre
+    lacunes:
+      type: array
+      items: string
+      description: Faiblesses ou manques détectés chez le candidat
+    competences_manquantes:
+      type: array
+      items: string
+      description: Compétences requises par l'offre mais absentes du CV
+    recommandation:
+      type: string
+      enum: [convoquer, attente, rejeter]
+      description: Recommandation finale de l'IA
+    justification:
+      type: string
+      description: Explication détaillée du score et de la recommandation
+
+# ─────────────────────────────────────────────
+# AGENT IA — TOOLS
+# ─────────────────────────────────────────────
+agent:
+  name: TalentMatchAgent
+  description: >
+    Agent conversationnel RH. Répond en langage naturel aux questions sur les
+    candidats analysés. Utilise des tools Laravel réels pour récupérer les données —
+    ne jamais inventer de scores ou de compétences. La mémoire est gérée via la
+    table messages (conversation_id).
+  memory: true  # persisté dans la table messages
+  system_prompt: >
+    Tu es TalentMatch, un assistant RH expert. Tu analyses des CVs, justifies des
+    scores de matching, et aides les recruteurs à prendre de meilleures décisions.
+    Tu as accès à des outils pour récupérer les vraies données — utilise-les
+    toujours plutôt que d'inventer des réponses. Réponds en français, de façon
+    claire et professionnelle.
+
+  tools:
+
+    getCandidateAnalysis:
+      description: >
+        Récupère l'analyse complète d'une candidature depuis la base de données.
+        Utiliser quand le RH pose une question sur le score, les compétences,
+        les lacunes ou la recommandation d'un candidat précis.
+      signature: getCandidateAnalysis(int $analyseId)
+      returns: Analyse avec relations offre et candidature
+      implementation: Analyse::with(['offre', 'candidature'])->findOrFail($analyseId)
+
+    getJobRequirements:
+      description: >
+        Récupère les critères d'une offre (compétences requises, niveau expérience,
+        description). Utiliser pour contextualiser l'analyse ou comparer avec le CV.
+      signature: getJobRequirements(int $offreId)
+      returns: Offre (titre, description, competences_requises, niveau_experience)
+      implementation: Offre::findOrFail($offreId)
+
+    compareCandidates:
+      description: >
+        Compare deux analyses sur la même offre. Retourne les deux analyses
+        côte à côte. Utiliser quand le RH demande "lequel des deux est meilleur ?".
+      signature: compareCandidates(int $id1, int $id2)
+      returns: array avec les deux Analyse (avec candidature et offre)
+      implementation: |
+        [
+          Analyse::with(['offre', 'candidature'])->findOrFail($id1),
+          Analyse::with(['offre', 'candidature'])->findOrFail($id2),
+        ]
+
+# ─────────────────────────────────────────────
+# JOBS & QUEUES
+# ─────────────────────────────────────────────
+jobs:
+  AnalyzeCandidateJob:
+    description: >
+      Job dispatché depuis AnalyseController après soumission d'un CV.
+      Lance l'appel au SDK laravel/ai en arrière-plan. Met à jour l'Analyse
+      avec les résultats et passe statut à "termine" (ou "echec" si erreur).
+    queue: default
+    retries: 3
+    dispatched_from: App\Http\Controllers\AnalyseController@store
+    handles: >
+      Appel SDK laravel/ai avec contrat JSON →
+      Hydrate les champs de l'Analyse →
+      Sauvegarde payload brut →
+      Met statut = 'termine' ou 'echec'
+
+# ─────────────────────────────────────────────
+# ROUTES
+# ─────────────────────────────────────────────
+routes:
+  auth:
+    - GET  /register
+    - POST /register
+    - GET  /login
+    - POST /login
+    - POST /logout
+
+  offres:
+    - GET    /offres                  # index — liste des offres de l'utilisateur
+    - GET    /offres/create           # formulaire création
+    - POST   /offres                  # store
+    - GET    /offres/{offre}          # show — détail + candidatures avec scores
+    - GET    /offres/{offre}/edit     # edit
+    - PUT    /offres/{offre}          # update
+    - DELETE /offres/{offre}          # destroy
+
+  candidatures:
+    - GET  /offres/{offre}/candidatures/create   # formulaire soumission CV
+    - POST /offres/{offre}/candidatures          # store → dispatch AnalyzeCandidateJob
+
+  analyses:
+    - GET  /analyses/{analyse}                   # show — détail analyse complète
+
+  conversations:
+    - GET  /analyses/{analyse}/conversations/create   # nouvelle conversation
+    - POST /analyses/{analyse}/conversations          # store
+    - GET  /conversations/{conversation}              # page chat
+    - POST /conversations/{conversation}/messages     # envoyer un message
+
+# ─────────────────────────────────────────────
+# USER STORIES
+# ─────────────────────────────────────────────
+features:
+
+  - id: US1
+    title: Inscription / Connexion / Déconnexion
+    status: todo
+    priority: must-have
+    description: >
+      Géré par Laravel Breeze. Toutes les routes sont protégées par auth.
+    acceptance_criteria:
+      - Un utilisateur peut s'inscrire avec nom, email, mot de passe
+      - Un utilisateur peut se connecter et accéder à son dashboard
+      - Un utilisateur déconnecté est redirigé vers /login
+      - Les offres et analyses sont rattachées à l'utilisateur connecté
+
+  - id: US2
+    title: Créer une offre d'emploi
+    status: todo
+    priority: must-have
+    description: >
+      Formulaire : titre, description, competences_requises (JSON), niveau_experience.
+    acceptance_criteria:
+      - Formulaire validé (titre requis, niveau_experience >= 0)
+      - competences_requises stockées en JSON
+      - L'offre rattachée à l'utilisateur via user_id
+      - Redirection vers le détail après création
+
+  - id: US3
+    title: Liste de mes offres
+    status: todo
+    priority: must-have
+    acceptance_criteria:
+      - Seules les offres du user connecté
+      - Nombre de candidatures affichées via withCount('analyses')
+      - Message si aucune offre
+
+  - id: US4
+    title: Voir le détail d'une offre
+    status: todo
+    priority: must-have
+    acceptance_criteria:
+      - Critères de l'offre affichés (competences_requises, niveau_experience)
+      - Liste des candidatures avec score et badge recommandation
+      - Policy : seul le propriétaire accède
+
+  - id: US5
+    title: Soumettre un CV
+    status: todo
+    priority: must-have
+    description: >
+      Formulaire avec nom et texte_cv. Crée une Candidature + une Analyse (statut=en_attente)
+      puis dispatch AnalyzeCandidateJob.
+    acceptance_criteria:
+      - Champs : nom (requis), texte_cv (requis, min 100 chars)
+      - Candidature et Analyse créées en base avant le dispatch
+      - Message flash "Analyse en cours..."
+      - Redirection vers /analyses/{analyse} (affiche statut en_attente)
+
+  - id: US6
+    title: Analyse IA structurée (Structured Output)
+    status: todo
+    priority: must-have
+    description: >
+      Le Job appelle le SDK laravel/ai avec le schéma ai_output_schema.
+      Hydrate les colonnes de l'Analyse. Sauvegarde le payload brut.
+    acceptance_criteria:
+      - SDK retourne exactement le contrat JSON défini
+      - Tous les champs array castés automatiquement (pas de json_decode manuel)
+      - recommandation casté en enum Recommandation
+      - score entre 0 et 100
+      - statut = 'termine' après succès, 'echec' après 3 échecs
+      - payload JSON sauvegardé pour debug
+
+  - id: US7
+    title: Voir l'analyse d'un candidat
+    status: todo
+    priority: must-have
+    acceptance_criteria:
+      - score affiché en grand (vert >70, orange 40-70, rouge <40)
+      - points_forts, lacunes, competences_manquantes en badges
+      - recommandation en badge coloré
+      - justification en texte complet
+      - Bouton "Discuter avec l'assistant"
+
+  - id: US8
+    title: Recommandation typée
+    status: todo
+    priority: must-have
+    acceptance_criteria:
+      - convoquer = badge vert
+      - attente = badge orange
+      - rejeter = badge rouge
+      - Visible depuis la liste des candidatures (US4)
+
+  - id: US9
+    title: Poser une question sur un candidat
+    status: todo
+    priority: must-have
+    description: >
+      Une Conversation est créée pour l'Analyse. Les Messages sont persistés en base.
+      L'agent utilise les tools pour répondre avec les vraies données.
+    acceptance_criteria:
+      - Interface chat avec historique (table messages) et input texte
+      - L'agent appelle getCandidateAnalysis pour répondre
+      - Suggestions de questions affichées
+
+  - id: US10
+    title: Mémoire de conversation
+    status: todo
+    priority: must-have
+    description: >
+      Les messages sont persistés dans la table messages (role + contenu).
+      Chaque appel à l'agent recharge l'historique complet de la conversation.
+    acceptance_criteria:
+      - Contexte maintenu entre les messages de la même conversation
+      - "Parle-moi de ses lacunes" fonctionne sans répéter le nom
+      - Recharger la page conserve l'historique
+      - Une conversation est liée à une analyse précise via analyse_id
+
+  - id: US11
+    title: L'assistant appelle des tools
+    status: todo
+    priority: must-have
+    acceptance_criteria:
+      - getCandidateAnalysis appelé quand on demande le score/lacunes
+      - getJobRequirements appelé pour contextualiser avec l'offre
+      - compareCandidates appelé quand on compare deux profils
+      - Données retournées = données réelles en base
+
+  - id: B1
+    title: Comparer deux candidats (Bonus)
+    status: todo
+    priority: nice-to-have
+    acceptance_criteria:
+      - Le RH demande "compare analyse 3 et analyse 5"
+      - L'agent appelle compareCandidates(3, 5)
+      - Recommandation argumentée indiquant le meilleur profil
+
+  - id: B2
+    title: Classement automatique (Bonus)
+    status: todo
+    priority: nice-to-have
+    acceptance_criteria:
+      - Candidatures triées par score DESC sur la page offre
+      - Implémenté via orderBy('score', 'desc')
+
+# ─────────────────────────────────────────────
+# CONVENTIONS
+# ─────────────────────────────────────────────
+conventions:
+  commits:
+    format_ai: "feat: description — AI-assisted"
+    format_manual: "feat: description"
+    format_config: "chore: description"
+    frequency: au moins un commit par phase
+  policies:
+    - Chaque offre protégée par OffrePolicy (seul le propriétaire y accède)
+    - Middleware auth sur toutes les routes sauf /login et /register
+  code_style:
+    - Services dans app/Services/ (ex: AnalyseService)
+    - Jobs dans app/Jobs/
+    - Enums dans app/Enums/ (Recommandation, MessageRole)
+    - Pas de logique métier dans les controllers
+  naming:
+    - Tables en français (offres, candidatures, analyses, conversations, messages)
+    - Models en français (Offre, Candidature, Analyse, Conversation, Message)
+    - Colonnes en français (titre, nom, texte_cv, score, contenu...)
