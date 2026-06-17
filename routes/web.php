@@ -23,10 +23,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/offres', [OffreController::class, 'index'])->name('offres.index');
-    Route::get('/offres/create', [OffreController::class, 'create'])->name('offres.create');
-    Route::post('/offres', [OffreController::class, 'store'])->name('offres.store');
-    Route::get('/offres/{offre}', [OffreController::class, 'show'])->name('offres.show');
+    Route::resource('offres', OffreController::class);
 });
 
 Route::middleware('auth')->group(function () {

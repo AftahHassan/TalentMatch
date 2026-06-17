@@ -65,16 +65,16 @@ class AnalyseTest extends TestCase
         $analyseVert = Analyse::factory()->termine()->create(['score' => 85]);
         $analyseVert->offre->update(['user_id' => $user->id]);
         $response = $this->actingAs($user)->get("/analyses/{$analyseVert->id}");
-        $response->assertSee('bg-green-100');
+        $response->assertSee('bg-green-50');
 
         $analyseOrange = Analyse::factory()->termine()->create(['score' => 55]);
         $analyseOrange->offre->update(['user_id' => $user->id]);
         $response = $this->actingAs($user)->get("/analyses/{$analyseOrange->id}");
-        $response->assertSee('bg-orange-100');
+        $response->assertSee('bg-amber-50');
 
         $analyseRouge = Analyse::factory()->termine()->create(['score' => 25]);
         $analyseRouge->offre->update(['user_id' => $user->id]);
         $response = $this->actingAs($user)->get("/analyses/{$analyseRouge->id}");
-        $response->assertSee('bg-red-100');
+        $response->assertSee('bg-red-50');
     }
 }

@@ -1,169 +1,174 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Analyse') }} — {{ $analyse->candidature?->nom ?? 'N/A' }}
-        </h2>
-    </x-slot>
+    <x-slot name="header">{{ __('Analyse') }} — {{ $analyse->candidature?->nom ?? 'N/A' }}</x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
-            @if ($analyse->statut === 'en_attente')
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                            <div class="flex">
-                                <div class="ml-3">
-                                    <p class="text-sm text-yellow-700">
-                                        {{ __('Analyse en cours... Le résultat sera bientôt disponible.') }}
-                                    </p>
-                                </div>
+    <div class="max-w-7xl mx-auto">
+        @if ($analyse->statut === 'en_attente')
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 flex items-start gap-4">
+                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-yellow-800">{{ __('Analyse en cours') }}</h3>
+                    <p class="text-sm text-yellow-700 mt-1">{{ __('Le résultat sera bientôt disponible. Veuillez rafraîchir la page.') }}</p>
+                </div>
+            </div>
+        @else
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-xl border border-gray-200 p-8">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">{{ __('Informations') }}</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase">{{ __('Candidat') }}</p>
+                                <p class="text-lg font-semibold text-gray-900 mt-1">{{ $analyse->candidature?->nom }}</p>
                             </div>
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase">{{ __('Offre') }}</p>
+                                <p class="text-lg font-semibold text-gray-900 mt-1">{{ $analyse->offre?->titre }}</p>
+                            </div>
+                            @if ($analyse->annees_experience !== null)
+                                <div>
+                                    <p class="text-xs text-gray-400 uppercase">{{ __('Expérience') }}</p>
+                                    <p class="text-lg font-semibold text-gray-900 mt-1">{{ $analyse->annees_experience }} ans</p>
+                                </div>
+                            @endif
+                            @if ($analyse->niveau_etude)
+                                <div>
+                                    <p class="text-xs text-gray-400 uppercase">{{ __('Niveau d\'études') }}</p>
+                                    <p class="text-lg font-semibold text-gray-900 mt-1">{{ $analyse->niveau_etude }}</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
-                </div>
-            @else
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                            <div class="lg:col-span-2 space-y-6">
-
-                                <div>
-                                    <h3 class="text-lg font-medium mb-2">{{ __('Candidat') }}</h3>
-                                    <p class="text-gray-700">{{ $analyse->candidature?->nom }}</p>
-                                </div>
-
-                                <div>
-                                    <h3 class="text-lg font-medium mb-2">{{ __('Offre') }}</h3>
-                                    <p class="text-gray-700">{{ $analyse->offre?->titre }}</p>
-                                </div>
-
-                                @if ($analyse->justification)
-                                    <div>
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Justification') }}</h3>
-                                        <p class="text-gray-700 whitespace-pre-line">{{ $analyse->justification }}</p>
-                                    </div>
-                                @endif
-
-                                @if (!empty($analyse->points_forts))
-                                    <div>
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Points forts') }}</h3>
-                                        <div class="flex flex-wrap gap-2">
-                                            @foreach ($analyse->points_forts as $point)
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">{{ $point }}</span>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if (!empty($analyse->lacunes))
-                                    <div>
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Lacunes') }}</h3>
-                                        <div class="flex flex-wrap gap-2">
-                                            @foreach ($analyse->lacunes as $lacune)
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">{{ $lacune }}</span>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if (!empty($analyse->competences_manquantes))
-                                    <div>
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Compétences manquantes') }}</h3>
-                                        <div class="flex flex-wrap gap-2">
-                                            @foreach ($analyse->competences_manquantes as $manquante)
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">{{ $manquante }}</span>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if (!empty($analyse->competences))
-                                    <div>
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Compétences') }}</h3>
-                                        <div class="flex flex-wrap gap-2">
-                                            @foreach ($analyse->competences as $competence)
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">{{ $competence }}</span>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if (!empty($analyse->langues))
-                                    <div>
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Langues') }}</h3>
-                                        <div class="flex flex-wrap gap-2">
-                                            @foreach ($analyse->langues as $langue)
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">{{ $langue }}</span>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                            </div>
-
-                            <div class="space-y-6">
-
-                                @if ($analyse->score !== null)
-                                    <div class="text-center">
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Score') }}</h3>
-                                        <div class="inline-flex items-center justify-center w-32 h-32 rounded-full text-4xl font-bold
-                                            {{ $analyse->score >= 70 ? 'bg-green-100 text-green-800' : ($analyse->score >= 40 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800') }}">
-                                            {{ $analyse->score }}
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if ($analyse->recommandation)
-                                    <div class="text-center">
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Recommandation') }}</h3>
-                                        @php
-                                            $badgeColors = [
-                                                'convoquer' => 'bg-green-100 text-green-800',
-                                                'attente' => 'bg-orange-100 text-orange-800',
-                                                'rejeter' => 'bg-red-100 text-red-800',
-                                            ];
-                                        @endphp
-                                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium {{ $badgeColors[$analyse->recommandation->value] ?? 'bg-gray-100 text-gray-800' }}">
-                                            {{ __($analyse->recommandation->value) }}
-                                        </span>
-                                    </div>
-                                @endif
-
-                                @if ($analyse->annees_experience !== null)
-                                    <div class="text-center">
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Expérience') }}</h3>
-                                        <p class="text-2xl font-semibold text-gray-700">{{ $analyse->annees_experience }} ans</p>
-                                    </div>
-                                @endif
-
-                                @if ($analyse->niveau_etude)
-                                    <div class="text-center">
-                                        <h3 class="text-lg font-medium mb-2">{{ __('Niveau d\'études') }}</h3>
-                                        <p class="text-xl text-gray-700">{{ $analyse->niveau_etude }}</p>
-                                    </div>
-                                @endif
-
-                            </div>
-
+                    @if ($analyse->justification)
+                        <div class="bg-white rounded-xl border border-gray-200 p-8">
+                            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">{{ __('Justification') }}</h3>
+                            <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ $analyse->justification }}</p>
                         </div>
+                    @endif
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        @if (!empty($analyse->points_forts))
+                            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                                <h3 class="text-sm font-medium text-green-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {{ __('Points forts') }}
+                                </h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($analyse->points_forts as $point)
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-50 text-green-700">{{ $point }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @if (!empty($analyse->lacunes))
+                            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                                <h3 class="text-sm font-medium text-red-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    {{ __('Lacunes') }}
+                                </h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($analyse->lacunes as $lacune)
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-50 text-red-700">{{ $lacune }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @if (!empty($analyse->competences_manquantes))
+                            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                                <h3 class="text-sm font-medium text-amber-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"/></svg>
+                                    {{ __('Compétences manquantes') }}
+                                </h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($analyse->competences_manquantes as $manquante)
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-amber-50 text-amber-700">{{ $manquante }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @if (!empty($analyse->competences))
+                            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                                <h3 class="text-sm font-medium text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    {{ __('Compétences') }}
+                                </h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($analyse->competences as $competence)
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700">{{ $competence }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @if (!empty($analyse->langues))
+                            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                                <h3 class="text-sm font-medium text-purple-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {{ __('Langues') }}
+                                </h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($analyse->langues as $langue)
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-purple-50 text-purple-700">{{ $langue }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <a href="{{ route('offres.show', $analyse->offre) }}" class="text-indigo-600 hover:text-indigo-900 text-sm">
-                        {{ __('Retour à l\'offre') }}
-                    </a>
+                <div class="space-y-6">
+                    @if ($analyse->score !== null)
+                        <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                            <p class="text-sm text-gray-500 uppercase tracking-wider font-medium mb-4">{{ __('Score') }}</p>
+                            <div class="inline-flex items-center justify-center w-36 h-36 rounded-full text-5xl font-bold mx-auto mb-2
+                                {{ $analyse->score >= 70 ? 'bg-green-50 text-green-700 border-4 border-green-200' : ($analyse->score >= 40 ? 'bg-amber-50 text-amber-700 border-4 border-amber-200' : 'bg-red-50 text-red-700 border-4 border-red-200') }}">
+                                {{ $analyse->score }}
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">/ 100</p>
+                        </div>
+                    @endif
 
-                    <form action="{{ route('conversations.store', $analyse) }}" method="POST" class="inline">
-                        @csrf
-                        <x-primary-button>
-                            {{ __('Discuter avec l\'assistant') }}
-                        </x-primary-button>
-                    </form>
+                    @if ($analyse->recommandation)
+                        <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                            <p class="text-sm text-gray-500 uppercase tracking-wider font-medium mb-4">{{ __('Recommandation') }}</p>
+                            @php
+                                $recoColors = [
+                                    'convoquer' => 'bg-green-50 text-green-700 border-green-200',
+                                    'attente' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                    'rejeter' => 'bg-red-50 text-red-700 border-red-200',
+                                ];
+                            @endphp
+                            <span class="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold border-2 {{ $recoColors[$analyse->recommandation->value] ?? 'bg-gray-50 text-gray-600 border-gray-200' }}">
+                                {{ match($analyse->recommandation->value) { 'convoquer' => __('À convoquer'), 'attente' => __('En attente'), 'rejeter' => __('Rejeter'), default => '—' } }}
+                            </span>
+                        </div>
+                    @endif
+
+                    <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                        <p class="text-sm text-gray-500 uppercase tracking-wider font-medium mb-4">{{ __('Assistant IA') }}</p>
+                        <p class="text-sm text-gray-600 mb-4">{{ __('Discutez avec l\'assistant pour approfondir cette analyse.') }}</p>
+                        <form action="{{ route('conversations.store', $analyse) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-500 transition w-full justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                {{ __('Discuter avec l\'assistant') }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            @endif
-        </div>
+            </div>
+
+            <div class="mt-6">
+                <a href="{{ route('offres.show', $analyse->offre) }}" class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 font-medium">
+                    &larr; {{ __('Retour à l\'offre') }}
+                </a>
+            </div>
+        @endif
     </div>
 </x-app-layout>

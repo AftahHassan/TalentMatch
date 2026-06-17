@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Offre;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Ai\StructuredAnonymousAgent;
 use Tests\TestCase;
 
 class CandidatureTest extends TestCase
@@ -13,6 +14,19 @@ class CandidatureTest extends TestCase
 
     public function test_un_utilisateur_connecte_peut_soumettre_un_cv(): void
     {
+        StructuredAnonymousAgent::fake([[                   
+            'competences' => ['PHP', 'Laravel', 'MySQL'],
+            'annees_experience' => 5,
+            'niveau_etude' => 'Master',
+            'langues' => ['Français', 'Anglais'],
+            'score' => 85,
+            'points_forts' => ['Maîtrise de Laravel', 'Expérience en architecture'],
+            'lacunes' => ['Manque d\'expérience DevOps'],
+            'competences_manquantes' => ['Docker'],
+            'recommandation' => 'convoquer',
+            'justification' => 'Profil bien adapté au poste.',
+        ]]);
+
         $user = User::factory()->create();
         $offre = Offre::factory()->create(['user_id' => $user->id]);
 
@@ -24,7 +38,8 @@ class CandidatureTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success', 'Analyse en cours...');
         $this->assertDatabaseHas('candidatures', ['nom' => 'Jean Dupont']);
-        $this->assertDatabaseHas('analyses', ['statut' => 'en_attente']);
+        $this->assertDatabaseHas('analyses', ['statut' => 'termine']);
+        $this->assertDatabaseHas('analyses', ['score' => 85]);
     }
 
     public function test_un_utilisateur_non_connecte_ne_peut_pas_soumettre_un_cv(): void
