@@ -1,98 +1,123 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ $offre->titre }}
-        </h2>
-    </x-slot>
+    <x-slot name="header">{{ $offre->titre }}</x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
-            {{-- Critères de l'offre --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <dl class="grid grid-cols-1 gap-4">
-                        <div>
-                            <dt class="font-medium text-gray-500">{{ __('Description') }}</dt>
-                            <dd class="mt-1">{{ $offre->description }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="font-medium text-gray-500">{{ __('Compétences requises') }}</dt>
-                            <dd class="mt-1">
-                                @foreach ($offre->competences_requises as $competence)
-                                    <span class="inline-block bg-indigo-100 text-indigo-800 text-sm px-2 py-1 rounded mr-1">{{ $competence }}</span>
-                                @endforeach
-                            </dd>
-                        </div>
-
-                        <div>
-                            <dt class="font-medium text-gray-500">{{ __('Niveau d\'expérience') }}</dt>
-                            <dd class="mt-1">{{ $offre->niveau_experience }} ans</dd>
-                        </div>
-                    </dl>
-                </div>
+    <div class="max-w-7xl mx-auto space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-8">
+                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">{{ __('Description') }}</h3>
+                <p class="text-gray-700 leading-relaxed">{{ $offre->description }}</p>
             </div>
 
-            {{-- Candidatures --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-medium mb-4">{{ __('Candidatures') }}</h3>
-
-                    @if ($offre->analyses->isEmpty())
-                        <p class="text-gray-500">{{ __('Aucune candidature pour le moment.') }}</p>
-                    @else
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead>
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Candidat') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Score') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Recommandation') }}</th>
-                                    <th class="px-6 py-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach ($offre->analyses->sortByDesc('score') as $analyse)
-                                    <tr>
-                                        <td class="px-6 py-4">{{ $analyse->candidature?->nom ?? 'N/A' }}</td>
-                                        <td class="px-6 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium
-                                                {{ $analyse->score >= 70 ? 'bg-green-100 text-green-800' : ($analyse->score >= 40 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800') }}">
-                                                {{ $analyse->score }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            @php
-                                                $badgeColors = [
-                                                    'convoquer' => 'bg-green-100 text-green-800',
-                                                    'attente' => 'bg-orange-100 text-orange-800',
-                                                    'rejeter' => 'bg-red-100 text-red-800',
-                                                ];
-                                            @endphp
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $badgeColors[$analyse->recommandation->value] ?? 'bg-gray-100 text-gray-800' }}">
-                                                {{ __($analyse->recommandation->value) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <a href="{{ route('analyses.show', $analyse) }}" class="text-indigo-600 hover:text-indigo-900 text-sm">{{ __('Voir l\'analyse') }}</a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
-
-                    <div class="mt-4">
-                        <a href="{{ route('candidatures.create', $offre) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500">
-                            {{ __('Soumettre un CV') }}
-                        </a>
+            <div class="bg-white rounded-xl border border-gray-200 p-8">
+                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">{{ __('Détails') }}</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Expérience requise') }}</p>
+                        <p class="text-lg font-semibold text-gray-900 mt-1">{{ $offre->niveau_experience }} ans</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Compétences requises') }}</p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            @foreach ($offre->competences_requises as $competence)
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium">{{ $competence }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Date de création') }}</p>
+                        <p class="text-sm text-gray-700 mt-1">{{ $offre->created_at->format('d F Y') }}</p>
                     </div>
                 </div>
             </div>
-
-            <div class="flex items-center justify-between">
-                <a href="{{ route('offres.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Retour aux offres') }}</a>
-            </div>
         </div>
+
+        <div class="bg-white rounded-xl border border-gray-200">
+            <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-gray-900">{{ __('Candidatures') }}</h3>
+                    <p class="text-sm text-gray-500">{{ $offre->analyses->count() }} candidature(s) reçue(s)</p>
+                </div>
+                <a href="{{ route('candidatures.create', $offre) }}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-500 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    {{ __('Soumettre un CV') }}
+                </a>
+            </div>
+
+            @if ($offre->analyses->isEmpty())
+                <div class="p-8 text-center">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <p class="text-gray-500">{{ __('Aucune candidature pour le moment.') }}</p>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Candidat') }}</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Score') }}</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Statut') }}</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Recommandation') }}</th>
+                                <th class="px-6 py-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach ($offre->analyses->sortByDesc('score') as $analyse)
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-8 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600">
+                                                {{ substr($analyse->candidature?->nom ?? 'NA', 0, 2) }}
+                                            </div>
+                                            <span class="font-medium text-gray-900">{{ $analyse->candidature?->nom ?? 'N/A' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @if ($analyse->score !== null)
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $analyse->score >= 70 ? 'bg-green-50 text-green-700' : ($analyse->score >= 40 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700') }}">
+                                                {{ $analyse->score }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @if ($analyse->statut === 'en_attente')
+                                            <span class="inline-flex items-center gap-1.5 text-sm text-yellow-700">
+                                                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                                                {{ __('En attente') }}
+                                            </span>
+                                        @else
+                                            <span class="text-sm text-green-700 font-medium">{{ __('Terminé') }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @php
+                                            $badgeColors = [
+                                                'convoquer' => 'bg-green-50 text-green-700',
+                                                'attente' => 'bg-amber-50 text-amber-700',
+                                                'rejeter' => 'bg-red-50 text-red-700',
+                                            ];
+                                        @endphp
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $badgeColors[$analyse->recommandation?->value] ?? 'bg-gray-50 text-gray-600' }}">
+                                            {{ match($analyse->recommandation?->value) { 'convoquer' => __('À convoquer'), 'attente' => __('En attente'), 'rejeter' => __('Rejeter'), default => '—' } }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <a href="{{ route('analyses.show', $analyse) }}" class="text-indigo-600 hover:text-indigo-500 font-medium text-sm">
+                                            {{ __('Voir l\'analyse') }} &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
+        <a href="{{ route('offres.index') }}" class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 font-medium">
+            &larr; {{ __('Retour aux offres') }}
+        </a>
     </div>
 </x-app-layout>
