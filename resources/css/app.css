@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/npm/anthropic-fonts@1.1.0/cdn/v1/css/all.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

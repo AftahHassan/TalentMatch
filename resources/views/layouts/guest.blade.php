@@ -1,3 +1,5 @@
+@props(['subtitle' => ''])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -6,27 +8,52 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'TalentMatch') }}</title>
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        * {
+            font-family: 'Anthropic Serif', Georgia, serif !important;
+        }
+
+        .auth-input:focus {
+            border-color: #2563EB !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10) !important;
+            outline: none;
+        }
+    </style>
 </head>
-<body class="font-sans antialiased">
-    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12" style="background-color:#f8fafc;">
-        <div class="w-full max-w-md">
-            <div class="text-center mb-8">
-                <a href="/" class="inline-flex items-center gap-2.5 text-brand-600 font-bold text-2xl">
-                    <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color:#2563eb;">
-                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+<body style="background-color:#EEF0F6;" class="antialiased">
+    <div class="min-h-screen flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-[420px]">
+            <div style="background:#fff;border-radius:20px;border:0.5px solid #e2e6ef;padding:44px 40px 36px;">
+
+                <div class="flex items-center gap-3 mb-1">
+                    <div style="width:36px;height:36px;border-radius:10px;background:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                     </div>
-                    TalentMatch
-                </a>
-            </div>
+                    <span style="font-size:21px;font-weight:600;color:#0f172a;">TalentMatch</span>
+                </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+                <p style="font-size:13.5px;color:#64748b;font-style:italic;margin-bottom:24px;">{{ $subtitle }}</p>
+
+                <div style="background:#f1f5f9;border-radius:10px;padding:3px;display:flex;margin-bottom:28px;">
+                    <a href="{{ route('login') }}"
+                       style="flex:1;text-align:center;padding:7px 12px;border-radius:8px;font-size:13px;cursor:pointer;text-decoration:none;{{ request()->routeIs('login') ? 'background:#fff;border:0.5px solid #e2e6ef;color:#0f172a;font-weight:500;' : 'color:#64748b;' }}"
+                       {{ request()->routeIs('login') ? '' : 'onmouseover=this.style.background="#f8fafc";this.style.color="#0f172a"' }}
+                       {{ request()->routeIs('login') ? '' : 'onmouseout=this.style.background="transparent";this.style.color="#64748b"' }}>Log in</a>
+                    <a href="{{ route('register') }}"
+                       style="flex:1;text-align:center;padding:7px 12px;border-radius:8px;font-size:13px;cursor:pointer;text-decoration:none;{{ request()->routeIs('register') ? 'background:#fff;border:0.5px solid #e2e6ef;color:#0f172a;font-weight:500;' : 'color:#64748b;' }}"
+                       {{ request()->routeIs('register') ? '' : 'onmouseover=this.style.background="#f8fafc";this.style.color="#0f172a"' }}
+                       {{ request()->routeIs('register') ? '' : 'onmouseout=this.style.background="transparent";this.style.color="#64748b"' }}>Sign up</a>
+                </div>
+
                 {{ $slot }}
+
             </div>
         </div>
     </div>
