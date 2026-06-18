@@ -9,9 +9,19 @@ use App\Models\Offre;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 class CandidatureController extends Controller
 {
+    public function index(): View
+    {
+        $candidatures = Candidature::with('analyse.offre')
+            ->latest()
+            ->paginate(15);
+
+        return view('candidatures.index', compact('candidatures'));
+    }
+
     public function create(Offre $offre)
     {
         Gate::authorize('view', $offre);
