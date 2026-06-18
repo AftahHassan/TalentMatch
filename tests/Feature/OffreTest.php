@@ -97,7 +97,7 @@ class OffreTest extends TestCase
         $response = $this->actingAs($user)->get('/offres');
 
         $response->assertStatus(200);
-        $response->assertSee('Aucune offre');
+        $response->assertSee('No job offers yet');
     }
 
     public function test_un_utilisateur_non_proprietaire_ne_peut_pas_voir_une_offre(): void
