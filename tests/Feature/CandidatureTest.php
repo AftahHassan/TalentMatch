@@ -14,7 +14,7 @@ class CandidatureTest extends TestCase
 
     public function test_un_utilisateur_connecte_peut_soumettre_un_cv(): void
     {
-        StructuredAnonymousAgent::fake([[                   
+        StructuredAnonymousAgent::fake([[
             'competences' => ['PHP', 'Laravel', 'MySQL'],
             'annees_experience' => 5,
             'niveau_etude' => 'Master',
@@ -101,8 +101,8 @@ class CandidatureTest extends TestCase
         $response = $this->actingAs($user)->get("/offres/{$offre->id}/candidatures/create");
 
         $response->assertStatus(200);
-        $response->assertSee('Soumettre un CV');
-        $response->assertSee('Nom du candidat');
-        $response->assertSee('Texte du CV');
+        $response->assertSee('New Analysis');
+        $response->assertSee('CANDIDATE NAME');
+        $response->assertSee('CV CONTENT (ALTERNATIVE)');
     }
 }
