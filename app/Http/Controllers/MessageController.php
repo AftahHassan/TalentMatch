@@ -50,7 +50,11 @@ class MessageController extends Controller
             .'Tu dois toujours utiliser un tool pour récupérer les données réelles avant de répondre. '
             .'Ne jamais inventer un score, une compétence ou une recommandation. '
             ."Si tu n'as pas l'ID, utilise les IDs fournis dans le contexte ci-dessus. "
-            .'Réponds en français.';
+            .'Réponds en français. '
+            .'Utilise UNIQUEMENT du texte brut avec formatage Markdown simple (**gras**, ### titres, - listes, tableaux Markdown). '
+            .'N\'utilise JAMAIS de HTML ou de balises inline. '
+            .'Pour les tableaux, utilise le format Markdown | colonne | colonne | avec une ligne de séparation |---|. '
+            .'Laisse une ligne vide entre les sections.';
 
         $response = agent(
             instructions: $instructions,

@@ -3,31 +3,32 @@
 
     @php
     function renderMarkdown(string $text): string {
-        $text = preg_replace_callback('/(\|.+\|\n?)+/', function($matches) {
-            $rows = array_filter(explode("\n", trim($matches[0])), fn($r) => trim($r));
-            $rows = array_values(array_filter($rows, fn($r) => !preg_match('/^\|[-|\s]+\|$/', trim($r))));
-            if (empty($rows)) return $matches[0];
-            $html = '<div class="overflow-x-auto my-3"><table class="w-full text-sm border-collapse">';
+        $text = preg_replace_callback('/(\|.+\|\n?)+/', function($m) {
+            $rows = array_values(array_filter(
+                explode("\n", trim($m[0])),
+                fn($r) => trim($r) && !preg_match('/^\|[\s\-|]+\|$/', trim($r))
+            ));
+            if (empty($rows)) return $m[0];
+            $html = '<div style="overflow-x:auto;margin:8px 0"><table style="width:100%;border-collapse:collapse;font-size:12px">';
             foreach ($rows as $i => $row) {
                 $cells = array_slice(explode('|', $row), 1, -1);
                 $tag = $i === 0 ? 'th' : 'td';
-                $class = $i === 0
-                    ? 'bg-indigo-50 text-indigo-900 font-semibold px-3 py-2 border border-gray-200 text-left text-xs'
-                    : 'px-3 py-2 border border-gray-200 text-gray-700 align-top';
-                $html .= '<tr>' . implode('', array_map(fn($c) => "<{$tag} class=\"{$class}\">" . trim($c) . "</{$tag}>", $cells)) . '</tr>';
+                $style = $i === 0
+                    ? 'background:#eff6ff;color:#1e40af;font-weight:600;padding:6px 10px;border:1px solid #e2e8f0;text-align:left;font-size:11px'
+                    : 'padding:6px 10px;border:1px solid #e2e8f0;color:#374151;vertical-align:top';
+                $html .= '<tr>' . implode('', array_map(
+                    fn($c) => "<{$tag} style=\"{$style}\">" . e(trim($c)) . "</{$tag}>",
+                    $cells
+                )) . '</tr>';
             }
-            $html .= '</table></div>';
-            return $html;
+            return $html . '</table></div>';
         }, $text);
 
-        $text = preg_replace('/\*\*(.*?)\*\*/', '<strong class="font-semibold text-gray-900">$1</strong>', $text);
-
-        $text = preg_replace('/^### (.*)$/m', '<h4 class="font-semibold text-gray-900 mt-4 mb-2">$1</h4>', $text);
-        $text = preg_replace('/^## (.*)$/m', '<h3 class="font-semibold text-gray-900 mt-4 mb-2 text-lg">$1</h3>', $text);
-
-        $text = preg_replace('/^- (.*)$/m', '<div class="flex gap-2 my-1"><span class="text-indigo-500 font-bold">•</span><span>$1</span></div>', $text);
-
-        $text = nl2br(e($text));
+        $text = preg_replace('/\*\*(.*?)\*\*/', '<strong style="font-weight:600;color:#111827">$1</strong>', $text);
+        $text = preg_replace('/^### (.*)$/m', '<div style="font-weight:600;color:#111827;font-size:14px;margin:10px 0 4px">$1</div>', $text);
+        $text = preg_replace('/^## (.*)$/m', '<div style="font-weight:600;font-size:15px;margin:10px 0 6px">$1</div>', $text);
+        $text = preg_replace('/^- (.*)$/m', '<div style="display:flex;gap:8px;margin:3px 0"><span style="color:#2563eb;font-weight:700">•</span><span>$1</span></div>', $text);
+        $text = nl2br($text);
 
         return $text;
     }
@@ -85,7 +86,7 @@
                             @if ($message->role->value === 'user')
                                 <p class="whitespace-pre-line text-sm">{{ $message->contenu }}</p>
                             @else
-                                <div class="text-sm prose prose-sm max-w-none">{!! renderMarkdown($message->contenu) !!}</div>
+                                <div class="text-sm leading-relaxed">{!! renderMarkdown($message->contenu) !!}</div>
                             @endif
                         </div>
                     </div>
@@ -100,26 +101,25 @@
                 @endforelse
             </div>
 
-            @if ($conversation->messages->isEmpty())
-                <div class="flex flex-wrap gap-2 px-6 pb-4 justify-center" id="suggested-questions">
-                    <button type="button" @click="document.querySelector('textarea[name=contenu]').value = 'Pourquoi ce score ?'; document.querySelector('form#chat-form').requestSubmit();" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition cursor-pointer">
-                        {{ __('Pourquoi ce score ?') }}
-                    </button>
-                    <button type="button" @click="document.querySelector('textarea[name=contenu]').value = 'Quelles questions poser en entretien ?'; document.querySelector('form#chat-form').requestSubmit();" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition cursor-pointer">
-                        {{ __('Quelles questions poser en entretien ?') }}
-                    </button>
-                    <button type="button" @click="document.querySelector('textarea[name=contenu]').value = 'Quels sont les points faibles du candidat ?'; document.querySelector('form#chat-form').requestSubmit();" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition cursor-pointer">
-                        {{ __('Quels sont les points faibles du candidat ?') }}
-                    </button>
+            <div x-data="chatComponent({{ $conversation->id }})" class="flex flex-col">
+                <div id="suggested-questions" style="padding:12px 20px;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-wrap:wrap;background:#fafafa;">
+                    @foreach(['Pourquoi ce score ?', 'Quelles questions poser en entretien ?', 'Quels sont les points faibles du candidat ?', 'Compare avec un autre candidat'] as $question)
+                    <button
+                        type="button"
+                        onclick="document.getElementById('chat-textarea').value = '{{ $question }}'; document.getElementById('chat-form').dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));"
+                        style="padding:6px 14px;border:1px solid #e2e8f0;border-radius:9999px;background:#fff;color:#374151;font-size:12px;cursor:pointer;transition:all 0.15s;white-space:nowrap;"
+                        onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe';this.style.color='#2563eb'"
+                        onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0';this.style.color='#374151'"
+                    >{{ $question }}</button>
+                    @endforeach
                 </div>
-            @endif
 
-            <div class="border-t border-gray-100 p-4" x-data="chatComponent({{ $conversation->id }})">
                 <form id="chat-form" method="POST" action="{{ route('messages.store', $conversation) }}"
-                      @submit.prevent="sendMessage($el)" class="flex items-start gap-3">
+                      @submit.prevent="sendMessage($event)" class="flex items-start gap-3 p-4 border-t border-gray-100">
                     @csrf
                     <div class="flex-1 relative">
                         <textarea
+                            id="chat-textarea"
                             name="contenu"
                             rows="1"
                             class="input-field resize-none pr-4"
@@ -149,8 +149,9 @@
         function chatComponent(conversationId) {
             return {
                 loading: false,
-                sendMessage(form) {
-                    const textarea = form.querySelector('textarea');
+                sendMessage(event) {
+                    const form = event.target;
+                    const textarea = document.getElementById('chat-textarea');
                     const message = textarea.value.trim();
                     if (!message || this.loading) return;
 
@@ -159,16 +160,13 @@
 
                     const emptyMsg = document.getElementById('empty-chat-msg');
                     if (emptyMsg) emptyMsg.remove();
-                    const suggestions = document.getElementById('suggested-questions');
-                    if (suggestions) suggestions.remove();
 
-                    container.insertAdjacentHTML('beforeend', `
-                        <div class="flex justify-end mb-4">
-                            <div class="bg-brand-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-xs lg:max-w-md text-sm">
-                                ${this.escapeHtml(message)}
-                            </div>
-                        </div>
-                    `);
+                    const userDiv = document.createElement('div');
+                    userDiv.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:16px';
+                    userDiv.innerHTML = `
+                        <div style="background:#2563eb;color:#fff;border-radius:16px;border-top-right-radius:4px;padding:12px 16px;max-width:75%;font-size:13px;line-height:1.6">${this.escapeHtml(message)}</div>
+                    `;
+                    container.appendChild(userDiv);
 
                     textarea.value = '';
                     this.loading = true;
@@ -181,13 +179,15 @@
                     .then(r => r.json())
                     .then(data => {
                         const formatted = this.formatResponse(data.message.contenu);
-                        container.insertAdjacentHTML('beforeend', `
-                            <div class="flex justify-start mb-4">
-                                <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-xs lg:max-w-md text-sm text-gray-800 prose prose-sm max-w-none">
-                                    ${formatted}
-                                </div>
+                        const msgDiv = document.createElement('div');
+                        msgDiv.style.cssText = 'display:flex;justify-content:flex-start;margin-bottom:16px;gap:10px;align-items:flex-start';
+                        msgDiv.innerHTML = `
+                            <div style="width:32px;height:32px;border-radius:50%;background:#eff6ff;border:1px solid #bfdbfe;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                             </div>
-                        `);
+                            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;border-top-left-radius:4px;padding:12px 16px;max-width:75%;font-size:13px;color:#374151;line-height:1.6">${formatted}</div>
+                        `;
+                        container.appendChild(msgDiv);
                         container.scrollTop = container.scrollHeight;
                     })
                     .catch(() => {
@@ -198,40 +198,30 @@
                     });
                 },
                 formatResponse(text) {
-                    let output = text;
-
-                    output = output.replace(/(\|.+\|\n?)+/g, (match) => {
-                        const rows = match.trim().split('\n').filter(row => row.trim());
-                        const filteredRows = rows.filter(row => !/^\|[-|\s]+\|$/.test(row.trim()));
-                        if (filteredRows.length === 0) return match;
-
-                        let html = '<div class="overflow-x-auto my-3"><table class="w-full text-sm border-collapse">';
-                        filteredRows.forEach((row, index) => {
-                            const cells = row.split('|').filter((cell, i, arr) => i > 0 && i < arr.length - 1);
-                            const tag = index === 0 ? 'th' : 'td';
-                            const cellClass = index === 0
-                                ? 'bg-indigo-50 text-indigo-900 font-semibold px-3 py-2 border border-gray-200 text-left text-xs'
-                                : 'px-3 py-2 border border-gray-200 text-gray-700 align-top';
-                            html += '<tr>' + cells.map(cell =>
-                                `<${tag} class="${cellClass}">${cell.trim()}</${tag}>`
-                            ).join('') + '</tr>';
+                    if (/<[a-z][\s\S]*>/i.test(text)) return text;
+                    text = text.replace(/(\|.+\|\n?)+/g, (match) => {
+                        const rows = match.trim().split('\n').filter(r => r.trim());
+                        const filtered = rows.filter(r => !/^\|[\s\-|]+\|$/.test(r.trim()));
+                        if (!filtered.length) return match;
+                        let html = '<div style="overflow-x:auto;margin:8px 0"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+                        filtered.forEach((row, i) => {
+                            const cells = row.split('|').filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+                            const tag = i === 0 ? 'th' : 'td';
+                            const style = i === 0
+                                ? 'background:#eff6ff;color:#1e40af;font-weight:600;padding:6px 10px;border:1px solid #e2e8f0;text-align:left;font-size:11px'
+                                : 'padding:6px 10px;border:1px solid #e2e8f0;color:#374151;vertical-align:top;font-size:12px';
+                            html += '<tr>' + cells.map(c => `<${tag} style="${style}">${c.trim()}</${tag}>`).join('') + '</tr>';
                         });
                         html += '</table></div>';
                         return html;
                     });
-
-                    output = output.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
-
-                    output = output.replace(/^### (.*$)/gim, '<h4 class="font-semibold text-gray-900 mt-4 mb-2 text-base">$1</h4>');
-                    output = output.replace(/^## (.*$)/gim, '<h3 class="font-semibold text-gray-900 mt-4 mb-2 text-lg">$1</h3>');
-
-                    output = output.replace(/^- (.*$)/gim, '<div class="flex gap-2 my-1"><span class="text-indigo-500 font-bold flex-shrink-0">•</span><span>$1</span></div>');
-
-                    output = output.replace(/\n\n/g, '<div class="my-2"></div>');
-
-                    output = output.replace(/\n/g, '<br>');
-
-                    return output;
+                    text = text.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight:600;color:#111827">$1</strong>');
+                    text = text.replace(/^### (.*$)/gim, '<div style="font-weight:600;color:#111827;font-size:14px;margin:12px 0 4px">$1</div>');
+                    text = text.replace(/^## (.*$)/gim, '<div style="font-weight:600;color:#111827;font-size:15px;margin:12px 0 6px">$1</div>');
+                    text = text.replace(/^- (.*$)/gim, '<div style="display:flex;gap:8px;margin:3px 0"><span style="color:#2563eb;font-weight:700;flex-shrink:0">•</span><span>$1</span></div>');
+                    text = text.replace(/\n\n/g, '<div style="margin:6px 0"></div>');
+                    text = text.replace(/\n/g, '<br>');
+                    return text;
                 },
                 escapeHtml(str) {
                     const div = document.createElement('div');
@@ -240,14 +230,6 @@
                 }
             };
         }
-
-        document.querySelectorAll('.suggested-q').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const textarea = document.querySelector('textarea[name="contenu"]');
-                textarea.value = this.textContent.trim();
-                document.getElementById('chat-form').requestSubmit();
-            });
-        });
     </script>
     @endpush
 </x-app-layout>

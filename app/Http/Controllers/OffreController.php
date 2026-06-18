@@ -45,7 +45,7 @@ class OffreController extends Controller
     {
         Gate::authorize('view', $offre);
 
-        $offre->load(['analyses' => fn($q) => $q->with('candidature')->orderBy('score', 'desc')]);
+        $offre->load(['analyses' => fn ($q) => $q->with('candidature')->orderBy('score', 'desc')]);
 
         return view('offres.show', compact('offre'));
     }
