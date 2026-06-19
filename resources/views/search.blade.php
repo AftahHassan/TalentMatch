@@ -1,61 +1,47 @@
-@extends('layouts.app')
+<x-app-layout>
+    @section('title', 'Recherche')
 
-@section('content')
-    <div>
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">
-                @if ($query)
-                    Search results for '{{ $query }}'
-                @else
-                    Search
-                @endif
-            </h1>
-        </div>
-
-        @if (!$query)
-            <div class="card p-8 text-center">
-                <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <p class="text-gray-500">Enter a search term to find candidates, jobs, or analyses.</p>
-            </div>
-        @elseif ($results->isEmpty())
-            <div class="card p-8 text-center">
-                <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
-                </svg>
-                <p class="text-gray-500">No results found for '{{ $query }}'</p>
-            </div>
+    <x-slot name="header">
+        @if ($query)
+            Résultats pour « {{ $query }} »
         @else
-            <div class="space-y-3">
-                @foreach ($results as $result)
-                    <div class="card p-4 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 {{ $result['type'] === 'Job Offer' ? 'bg-blue-50' : 'bg-green-50' }}">
-                            @if ($result['type'] === 'Job Offer')
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path d="M21 13.255A23.193 23.193 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                </svg>
-                            @else
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
-                                </svg>
-                            @endif
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <a href="{{ $result['url'] }}" class="text-sm font-medium text-gray-900 hover:text-blue-600 transition truncate block">
-                                {{ $result['title'] }}
-                            </a>
-                        </div>
-                        <span class="badge-gray text-xs whitespace-nowrap">{{ $result['type'] }}</span>
-                    </div>
-                @endforeach
-            </div>
+            Recherche
         @endif
+    </x-slot>
+    <x-slot name="subtitle">Recherchez des candidats, offres ou analyses</x-slot>
 
-        <div class="mt-8">
-            <a href="{{ route('dashboard') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                &larr; Back to Dashboard
-            </a>
+    @if (!$query)
+        <div class="card">
+            <x-empty-state title="Entrez un terme de recherche" subtitle="Trouvez des candidats, des offres d'emploi ou des analyses." />
         </div>
+    @elseif ($results->isEmpty())
+        <div class="card">
+            <x-empty-state title="Aucun résultat trouvé" subtitle="Aucun résultat pour « {{ $query }}\&quot;. Essayez un autre terme." />
+        </div>
+    @else
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            @foreach ($results as $result)
+                <div class="card" style="padding:16px;display:flex;align-items:center;gap:16px;">
+                    <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:{{ $result['type'] === 'Job Offer' ? 'var(--color-primary-light)' : 'var(--color-success-bg)' }};">
+                        @if ($result['type'] === 'Job Offer')
+                            <svg class="w-5 h-5" style="color:var(--color-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 13.255A23.193 23.193 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        @else
+                            <svg class="w-5 h-5" style="color:var(--color-success-text);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                        @endif
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <a href="{{ $result['url'] }}" style="font-family:var(--font-sans);font-size:13.5px;font-weight:500;color:var(--color-text-primary);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;">{{ $result['title'] }}</a>
+                    </div>
+                    <x-badge variant="neutral" style="font-size:11px;flex-shrink:0;">{{ $result['type'] }}</x-badge>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    <div style="margin-top:24px;">
+        <a href="{{ route('dashboard') }}" style="font-family:var(--font-sans);font-size:12.5px;color:var(--color-primary);text-decoration:none;font-weight:500;display:flex;align-items:center;gap:6px;">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Retour au tableau de bord
+        </a>
     </div>
-@endsection
+</x-app-layout>

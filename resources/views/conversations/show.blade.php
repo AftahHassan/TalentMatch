@@ -14,8 +14,8 @@
                 $cells = array_slice(explode('|', $row), 1, -1);
                 $tag = $i === 0 ? 'th' : 'td';
                 $style = $i === 0
-                    ? 'background:#eff6ff;color:#1e40af;font-weight:600;padding:6px 10px;border:1px solid #e2e8f0;text-align:left;font-size:11px'
-                    : 'padding:6px 10px;border:1px solid #e2e8f0;color:#374151;vertical-align:top';
+                    ? 'background:var(--color-primary-light);color:var(--color-primary);font-weight:600;padding:6px 10px;border:1px solid var(--color-border);text-align:left;font-size:11px'
+                    : 'padding:6px 10px;border:1px solid var(--color-border);color:var(--color-text-secondary);vertical-align:top';
                 $html .= '<tr>' . implode('', array_map(
                     fn($c) => "<{$tag} style=\"{$style}\">" . e(trim($c)) . "</{$tag}>",
                     $cells
@@ -24,118 +24,136 @@
             return $html . '</table></div>';
         }, $text);
 
-        $text = preg_replace('/\*\*(.*?)\*\*/', '<strong style="font-weight:600;color:#111827">$1</strong>', $text);
-        $text = preg_replace('/^### (.*)$/m', '<div style="font-weight:600;color:#111827;font-size:14px;margin:10px 0 4px">$1</div>', $text);
+        $text = preg_replace('/\*\*(.*?)\*\*/', '<strong style="font-weight:600;color:var(--color-text-primary)">$1</strong>', $text);
+        $text = preg_replace('/^### (.*)$/m', '<div style="font-weight:600;color:var(--color-text-primary);font-size:14px;margin:10px 0 4px">$1</div>', $text);
         $text = preg_replace('/^## (.*)$/m', '<div style="font-weight:600;font-size:15px;margin:10px 0 6px">$1</div>', $text);
-        $text = preg_replace('/^- (.*)$/m', '<div style="display:flex;gap:8px;margin:3px 0"><span style="color:#2563eb;font-weight:700">•</span><span>$1</span></div>', $text);
+        $text = preg_replace('/^- (.*)$/m', '<div style="display:flex;gap:8px;margin:3px 0"><span style="color:var(--color-primary);font-weight:700">•</span><span>$1</span></div>', $text);
         $text = nl2br($text);
 
         return $text;
     }
     @endphp
 
-    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 h-[calc(100vh-10rem)]">
-        <div class="lg:w-72 card p-6 flex-shrink-0 overflow-y-auto">
+    <div style="display:flex;gap:20px;height:calc(100vh - 140px);">
+        {{-- Side panel with analysis info --}}
+        <div class="card" style="width:260px;flex-shrink:0;overflow-y:auto;padding:20px;">
             @php $analyse = $conversation->analyse; @endphp
-            <a href="{{ route('analyses.show', $analyse) }}" class="btn-ghost w-full justify-start mb-4">
-                &larr; {{ __('Back to Analysis') }}
+            <a href="{{ route('analyses.show', $analyse) }}" style="font-family:var(--font-sans);font-size:12.5px;color:var(--color-primary);text-decoration:none;display:flex;align-items:center;gap:6px;margin-bottom:16px;font-weight:500;">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Retour à l'analyse
             </a>
 
-            <div class="mb-4 pb-4 border-b border-gray-100">
-                <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Candidate') }}</p>
-                <p class="font-semibold text-gray-900 mt-1">{{ $analyse->candidature?->nom ?? 'N/A' }}</p>
+            <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--color-border-soft);">
+                <p style="font-family:var(--font-sans);font-size:11px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;margin-bottom:6px;">Candidat</p>
+                <p style="font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0;">{{ $analyse->candidature?->nom ?? 'N/A' }}</p>
             </div>
 
-            <div class="mb-4 pb-4 border-b border-gray-100">
-                <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Job Offer') }}</p>
-                <p class="font-semibold text-gray-900 mt-1">{{ $analyse->offre?->titre }}</p>
+            <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--color-border-soft);">
+                <p style="font-family:var(--font-sans);font-size:11px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;margin-bottom:6px;">Poste</p>
+                <p style="font-family:var(--font-sans);font-size:13px;color:var(--color-text-secondary);margin:0;">{{ $analyse->offre?->titre }}</p>
             </div>
 
             @if ($analyse->score !== null)
-                <div class="mb-4 pb-4 border-b border-gray-100">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Score') }}</p>
-                    <p class="text-2xl font-bold mt-1 {{ $analyse->score >= 70 ? 'text-green-600' : ($analyse->score >= 40 ? 'text-amber-600' : 'text-red-600') }}">
-                        {{ $analyse->score }}
-                        <span class="text-sm text-gray-400 font-normal">/ 100</span>
-                    </p>
+                <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--color-border-soft);">
+                    <p style="font-family:var(--font-sans);font-size:11px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;margin-bottom:8px;">Score</p>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <x-score-circle :score="$analyse->score" />
+                        <span style="font-family:var(--font-sans);font-size:12px;color:var(--color-text-muted);">
+                            {{ $analyse->score >= 70 ? 'Excellent' : ($analyse->score >= 40 ? 'Moyen' : 'Faible') }}
+                        </span>
+                    </div>
                 </div>
             @endif
 
             @if ($analyse->recommandation)
                 <div>
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">{{ __('Recommendation') }}</p>
-                    @php
-                        $recoColors = [
-                            'convoquer' => 'bg-green-50 text-green-700',
-                            'attente' => 'bg-amber-50 text-amber-700',
-                            'rejeter' => 'bg-red-50 text-red-700',
-                        ];
-                    @endphp
-                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium {{ $recoColors[$analyse->recommandation->value] ?? 'bg-gray-50 text-gray-600' }}">
-                        {{ match($analyse->recommandation->value) { 'convoquer' => __('To Contact'), 'attente' => __('On Hold'), 'rejeter' => __('Reject'), default => '—' } }}
-                    </span>
+                    <p style="font-family:var(--font-sans);font-size:11px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;margin-bottom:8px;">Recommandation</p>
+                    <x-badge variant="{{ $analyse->recommandation->value === 'convoquer' ? 'success' : ($analyse->recommandation->value === 'attente' ? 'warning' : 'danger') }}">
+                        {{ match($analyse->recommandation->value) { 'convoquer' => 'À convoquer', 'attente' => 'En attente', 'rejeter' => 'Rejeter', default => '—' } }}
+                    </x-badge>
                 </div>
             @endif
         </div>
 
-        <div class="flex-1 card flex flex-col overflow-hidden">
-            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="messages-container">
+        {{-- Chat panel --}}
+        <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+            {{-- Messages --}}
+            <div style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px;" id="messages-container">
                 @forelse ($conversation->messages as $message)
-                    <div class="flex {{ $message->role->value === 'user' ? 'justify-end' : 'justify-start' }}">
-                        <div class="max-w-[75%] rounded-xl px-5 py-3 {{ $message->role->value === 'user' ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-800' }}">
-                            @if ($message->role->value === 'user')
-                                <p class="whitespace-pre-line text-sm">{{ $message->contenu }}</p>
-                            @else
-                                <div class="text-sm leading-relaxed">{!! renderMarkdown($message->contenu) !!}</div>
-                            @endif
-                        </div>
+                    <div style="display:flex;{{ $message->role->value === 'user' ? 'justify-content:flex-end' : 'justify-content:flex-start' }};">
+                        @if ($message->role->value === 'user')
+                            <div style="background:var(--color-primary);color:#fff;border-radius:18px 18px 4px 18px;padding:12px 16px;max-width:60%;font-family:var(--font-sans);font-size:14px;line-height:1.6;">
+                                {{ $message->contenu }}
+                            </div>
+                        @else
+                            <div style="display:flex;gap:10px;align-items:flex-start;max-width:75%;">
+                                <div style="width:28px;height:28px;border-radius:999px;background:var(--color-primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </div>
+                                <div style="background:var(--color-surface);border:0.5px solid var(--color-border);border-radius:18px 18px 18px 4px;padding:14px 16px;">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                        <span style="font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--color-text-primary);">TalentMatch AI</span>
+                                        <span style="font-family:var(--font-sans);font-size:11px;color:var(--color-text-muted);">{{ $message->created_at->format('H:i') }}</span>
+                                    </div>
+                                    <div style="font-family:var(--font-sans);font-size:14px;line-height:1.7;color:var(--color-text-secondary);">{!! renderMarkdown($message->contenu) !!}</div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 @empty
-                    <div class="text-center py-12" id="empty-chat-msg">
-                        <div class="w-16 h-16 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    <div style="text-align:center;padding:40px 20px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;" id="empty-chat-msg">
+                        <div style="width:56px;height:56px;border-radius:14px;background:var(--color-primary-light);display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                         </div>
-                        <p class="text-gray-900 font-semibold text-lg">{{ __('AI Assistant') }}</p>
-                        <p class="text-gray-400 text-sm mt-1">{{ __('Ask questions about this analysis.') }}</p>
+                        <p style="font-family:var(--font-serif);font-size:16px;font-weight:600;color:var(--color-text-primary);margin-bottom:4px;">Assistant IA</p>
+                        <p style="font-family:var(--font-sans);font-size:13px;color:var(--color-text-muted);">Posez des questions sur cette analyse.</p>
                     </div>
                 @endforelse
             </div>
 
-            <div x-data="chatComponent({{ $conversation->id }})" class="flex flex-col">
-                <div id="suggested-questions" style="padding:12px 20px;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-wrap:wrap;background:#fafafa;">
-                    @foreach(['Pourquoi ce score ?', 'Quelles questions poser en entretien ?', 'Quels sont les points faibles du candidat ?', 'Compare avec un autre candidat'] as $question)
-                    <button
-                        type="button"
-                        onclick="document.getElementById('chat-textarea').value = '{{ $question }}'; document.getElementById('chat-form').dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));"
-                        style="padding:6px 14px;border:1px solid #e2e8f0;border-radius:9999px;background:#fff;color:#374151;font-size:12px;cursor:pointer;transition:all 0.15s;white-space:nowrap;"
-                        onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe';this.style.color='#2563eb'"
-                        onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0';this.style.color='#374151'"
-                    >{{ $question }}</button>
-                    @endforeach
-                </div>
+            {{-- Suggested questions --}}
+            <div style="padding:12px 20px;border-top:1px solid var(--color-border-soft);display:flex;gap:8px;flex-wrap:wrap;background:var(--color-bg);">
+                @foreach(['Pourquoi ce score ?', 'Quelles questions poser en entretien ?', 'Points faibles du candidat', 'Comparer avec un autre'] as $question)
+                <button
+                    type="button"
+                    onclick="document.getElementById('chat-textarea').value = '{{ $question }}'; document.getElementById('chat-form').dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));"
+                    style="padding:6px 14px;border:1px solid var(--color-primary);border-radius:999px;background:transparent;color:var(--color-primary);font-family:var(--font-sans);font-size:12px;cursor:pointer;transition:all 0.15s;white-space:nowrap;"
+                    onmouseover="this.style.background='var(--color-primary-light)'"
+                    onmouseout="this.style.background='transparent'"
+                >{{ $question }}</button>
+                @endforeach
+            </div>
 
+            {{-- Input row --}}
+            <div x-data="chatComponent({{ $conversation->id }})" style="border-top:1px solid var(--color-border);padding:16px 24px;background:var(--color-surface);">
                 <form id="chat-form" method="POST" action="{{ route('messages.store', $conversation) }}"
-                      @submit.prevent="sendMessage($event)" class="flex items-start gap-3 p-4 border-t border-gray-100">
+                      @submit.prevent="sendMessage($event)" style="display:flex;align-items:flex-end;gap:12px;">
                     @csrf
-                    <div class="flex-1 relative">
+                    <div style="flex:1;position:relative;">
                         <textarea
                             id="chat-textarea"
                             name="contenu"
                             rows="1"
-                            class="input-field resize-none pr-4"
-                            placeholder="{{ __('Write your message...') }}"
+                            class="input-field"
+                            style="resize:none;padding:12px 16px;border-radius:12px;"
+                            placeholder="Écrivez votre message..."
                             required
+                            x-ref="textarea"
                         ></textarea>
                     </div>
                     <button
                         type="submit"
                         :disabled="loading"
-                        class="flex-shrink-0 w-10 h-10 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-full flex items-center justify-center transition">
+                        style="width:40px;height:40px;border-radius:999px;background:var(--color-primary);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background 0.15s;"
+                        :style="loading ? 'opacity:0.5' : ''"
+                        onmouseover="this.style.background='var(--color-primary-dark)'"
+                        onmouseout="this.style.background='var(--color-primary)'"
+                    >
                         <svg x-show="!loading" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                         </svg>
-                        <svg x-show="loading" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg x-show="loading" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
                             <path d="M21 12a9 9 0 11-6.219-8.56"/>
                         </svg>
                     </button>
@@ -164,9 +182,10 @@
                     const userDiv = document.createElement('div');
                     userDiv.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:16px';
                     userDiv.innerHTML = `
-                        <div style="background:#2563eb;color:#fff;border-radius:16px;border-top-right-radius:4px;padding:12px 16px;max-width:75%;font-size:13px;line-height:1.6">${this.escapeHtml(message)}</div>
+                        <div style="background:var(--color-primary);color:#fff;border-radius:18px 18px 4px 18px;padding:12px 16px;max-width:60%;font-family:var(--font-sans);font-size:14px;line-height:1.6">${this.escapeHtml(message)}</div>
                     `;
                     container.appendChild(userDiv);
+                    container.scrollTop = container.scrollHeight;
 
                     textarea.value = '';
                     this.loading = true;
@@ -180,12 +199,20 @@
                     .then(data => {
                         const formatted = this.formatResponse(data.message.contenu);
                         const msgDiv = document.createElement('div');
-                        msgDiv.style.cssText = 'display:flex;justify-content:flex-start;margin-bottom:16px;gap:10px;align-items:flex-start';
+                        msgDiv.style.cssText = 'display:flex;justify-content:flex-start;margin-bottom:16px';
                         msgDiv.innerHTML = `
-                            <div style="width:32px;height:32px;border-radius:50%;background:#eff6ff;border:1px solid #bfdbfe;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            <div style="display:flex;gap:10px;align-items:flex-start;max-width:75%;">
+                                <div style="width:28px;height:28px;border-radius:999px;background:var(--color-primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </div>
+                                <div style="background:var(--color-surface);border:0.5px solid var(--color-border);border-radius:18px 18px 18px 4px;padding:14px 16px;">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                        <span style="font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--color-text-primary);">TalentMatch AI</span>
+                                        <span style="font-family:var(--font-sans);font-size:11px;color:var(--color-text-muted);">${new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</span>
+                                    </div>
+                                    <div style="font-family:var(--font-sans);font-size:14px;line-height:1.7;color:var(--color-text-secondary);">${formatted}</div>
+                                </div>
                             </div>
-                            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;border-top-left-radius:4px;padding:12px 16px;max-width:75%;font-size:13px;color:#374151;line-height:1.6">${formatted}</div>
                         `;
                         container.appendChild(msgDiv);
                         container.scrollTop = container.scrollHeight;
@@ -208,17 +235,17 @@
                             const cells = row.split('|').filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
                             const tag = i === 0 ? 'th' : 'td';
                             const style = i === 0
-                                ? 'background:#eff6ff;color:#1e40af;font-weight:600;padding:6px 10px;border:1px solid #e2e8f0;text-align:left;font-size:11px'
-                                : 'padding:6px 10px;border:1px solid #e2e8f0;color:#374151;vertical-align:top;font-size:12px';
+                                ? 'background:var(--color-primary-light);color:var(--color-primary);font-weight:600;padding:6px 10px;border:1px solid var(--color-border);text-align:left;font-size:11px'
+                                : 'padding:6px 10px;border:1px solid var(--color-border);color:var(--color-text-secondary);vertical-align:top;font-size:12px';
                             html += '<tr>' + cells.map(c => `<${tag} style="${style}">${c.trim()}</${tag}>`).join('') + '</tr>';
                         });
                         html += '</table></div>';
                         return html;
                     });
-                    text = text.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight:600;color:#111827">$1</strong>');
-                    text = text.replace(/^### (.*$)/gim, '<div style="font-weight:600;color:#111827;font-size:14px;margin:12px 0 4px">$1</div>');
-                    text = text.replace(/^## (.*$)/gim, '<div style="font-weight:600;color:#111827;font-size:15px;margin:12px 0 6px">$1</div>');
-                    text = text.replace(/^- (.*$)/gim, '<div style="display:flex;gap:8px;margin:3px 0"><span style="color:#2563eb;font-weight:700;flex-shrink:0">•</span><span>$1</span></div>');
+                    text = text.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight:600;color:var(--color-text-primary)">$1</strong>');
+                    text = text.replace(/^### (.*$)/gim, '<div style="font-weight:600;color:var(--color-text-primary);font-size:14px;margin:12px 0 4px">$1</div>');
+                    text = text.replace(/^## (.*$)/gim, '<div style="font-weight:600;color:var(--color-text-primary);font-size:15px;margin:12px 0 6px">$1</div>');
+                    text = text.replace(/^- (.*$)/gim, '<div style="display:flex;gap:8px;margin:3px 0"><span style="color:var(--color-primary);font-weight:700;flex-shrink:0">•</span><span>$1</span></div>');
                     text = text.replace(/\n\n/g, '<div style="margin:6px 0"></div>');
                     text = text.replace(/\n/g, '<br>');
                     return text;

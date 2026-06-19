@@ -7,148 +7,166 @@
         $avgScore = \App\Models\Analyse::where('statut','termine')->avg('score') ?? 0;
         $recentOffres = auth()->user()->offres()->withCount('analyses')->latest()->take(5)->get();
         $recentAnalyses = \App\Models\Analyse::with(['candidature','offre'])->where('statut','termine')->latest()->take(5)->get();
+        $dateFr = now()->locale('fr')->isoFormat('dddd D MMMM YYYY');
     @endphp
 
-    <div>
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p class="mt-1.5 text-sm text-gray-500">Welcome back, {{ auth()->user()->name }}. Here's what's happening.</p>
+    @section('title', 'Tableau de bord')
+
+    {{-- Page header --}}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <div>
+            <h1 style="font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--color-text-primary);">Tableau de bord</h1>
+            <p style="font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--color-text-muted);margin-top:4px;">{{ ucfirst($dateFr) }}</p>
         </div>
+        <a href="{{ route('offres.create') }}" class="btn-primary">
+            <span>+</span>
+            Nouvelle offre
+        </a>
+    </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="card p-5">
-                <div class="flex items-start justify-between">
-                    <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 13.255A23.193 23.193 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    </div>
-                    <span class="badge-green">+12%</span>
-                </div>
-                <div class="mt-4">
-                    <p class="text-2xl font-bold text-gray-900">{{ $totalOffres }}</p>
-                    <p class="text-sm text-gray-500 mt-1">Total Job Offers</p>
-                </div>
+    {{-- Stats grid --}}
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
+        <x-stat-card number="{{ $totalCandidatures }}" label="Candidats total" trend="+12%" :trendUp="true" />
+        <x-stat-card number="{{ $toConvoke }}" label="Présélectionnés" trend="+8%" :trendUp="true" />
+        <x-stat-card number="{{ $totalAnalyses }}" label="En entretien" trend="+15%" :trendUp="true" />
+        <x-stat-card number="{{ round($avgScore) }}" label="Score moyen" trend="{{ $avgScore >= 50 ? '+5%' : '-2%' }}" :trendUp="$avgScore >= 50" />
+    </div>
+
+    {{-- Two-column row --}}
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:20px;margin-bottom:28px;">
+        {{-- Recent candidates --}}
+        <div class="card" style="overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;">
+                <h3 style="font-family:var(--font-serif);font-size:15px;font-weight:600;color:var(--color-text-primary);">Candidats récents</h3>
+                <a href="{{ route('candidatures.index') }}" style="font-family:var(--font-sans);font-size:12.5px;color:var(--color-primary);text-decoration:none;font-weight:500;">Voir tout</a>
             </div>
-
-            <div class="card p-5">
-                <div class="flex items-start justify-between">
-                    <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                    </div>
-                    <span class="badge-green">+8%</span>
-                </div>
-                <div class="mt-4">
-                    <p class="text-2xl font-bold text-gray-900">{{ $totalCandidatures }}</p>
-                    <p class="text-sm text-gray-500 mt-1">Total Candidates</p>
-                </div>
-            </div>
-
-            <div class="card p-5">
-                <div class="flex items-start justify-between">
-                    <div class="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    </div>
-                    <span class="badge-green">+15%</span>
-                </div>
-                <div class="mt-4">
-                    <p class="text-2xl font-bold text-gray-900">{{ $totalAnalyses }}</p>
-                    <p class="text-sm text-gray-500 mt-1">Analyzed Candidates</p>
-                </div>
-            </div>
-
-            <div class="card p-5">
-                <div class="flex items-start justify-between">
-                    <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
-                    <span class="badge-green">+22%</span>
-                </div>
-                <div class="mt-4">
-                    <p class="text-2xl font-bold text-gray-900">{{ $toConvoke }}</p>
-                    <p class="text-sm text-gray-500 mt-1">Interview Recommended</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex flex-col lg:flex-row gap-6">
-            <div class="flex-1 card">
-                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 class="font-semibold text-gray-900">Top AI Matches</h3>
-                    <a href="{{ route('offres.index') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">View All</a>
-                </div>
-                <div class="p-5">
-                    @if ($recentAnalyses->isEmpty())
-                        <p class="text-gray-500 text-sm">No analyses completed yet.</p>
-                    @else
-                        <div class="space-y-1">
+            <div style="padding:12px 0 0;">
+                @if ($recentAnalyses->isEmpty())
+                    <x-empty-state title="Aucun candidat pour le moment" subtitle="Les candidats analysés apparaîtront ici." />
+                @else
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th class="table-header">Nom</th>
+                                <th class="table-header">Poste</th>
+                                <th class="table-header">Score</th>
+                                <th class="table-header">Statut</th>
+                                <th class="table-header" style="width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             @foreach ($recentAnalyses as $analyse)
-                                <a href="{{ route('analyses.show', $analyse) }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
-                                    <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                        {{ strtoupper(substr($analyse->candidature?->nom ?? '?', 0, 2)) }}
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 truncate">{{ $analyse->candidature?->nom ?? 'Unknown' }}</p>
-                                        <p class="text-xs text-gray-500 truncate">Applied for {{ $analyse->offre?->titre ?? 'N/A' }}</p>
-                                    </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 {{ $analyse->score >= 70 ? 'text-yellow-400' : ($analyse->score >= 40 ? 'text-yellow-400' : 'text-gray-300') }}" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                        <span class="{{ $analyse->score >= 70 ? 'badge-green' : ($analyse->score >= 40 ? 'badge-amber' : 'badge-red') }}">
-                                            {{ $analyse->score }}/100
-                                        </span>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <div class="w-full lg:w-[320px] flex-shrink-0 space-y-6">
-                <div class="card p-6 text-center">
-                    <p class="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-5">Avg Matching Score</p>
-                    <div class="relative inline-flex items-center justify-center">
-                        @php $circumference = 2 * pi() * 54; @endphp
-                        <svg class="transform -rotate-90" width="140" height="140" viewBox="0 0 120 120">
-                            <circle cx="60" cy="60" r="54" fill="none" stroke="#e5e7eb" stroke-width="8"/>
-                            <circle cx="60" cy="60" r="54" fill="none" stroke="#2563eb" stroke-width="8" stroke-linecap="round"
-                                stroke-dasharray="{{ $circumference }}"
-                                stroke-dashoffset="{{ $circumference * (1 - $avgScore / 100) }}"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-3xl font-bold text-gray-900">{{ round($avgScore) }}</span>
-                        </div>
-                    </div>
-                    <p class="mt-4 text-xs text-gray-500">Average matching score across all analyses</p>
-                </div>
-
-                <div class="card">
-                    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-900">Recent Job Offers</h3>
-                        <a href="{{ route('offres.index') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">View All</a>
-                    </div>
-                    <div class="p-5">
-                        @if ($recentOffres->isEmpty())
-                            <p class="text-gray-500 text-sm">No offers yet.</p>
-                            <a href="{{ route('offres.create') }}" class="mt-3 inline-flex items-center text-sm text-brand-600 hover:text-brand-700 font-medium">
-                                Create your first offer &rarr;
-                            </a>
-                        @else
-                            <div class="space-y-1">
-                                @foreach ($recentOffres as $offre)
-                                    <a href="{{ route('offres.show', $offre) }}" class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition">
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-medium text-gray-900 truncate">{{ $offre->titre }}</p>
-                                            <p class="text-xs text-gray-500">{{ $offre->analyses_count }} analyses</p>
+                                <tr>
+                                    <td class="table-cell" style="font-weight:500;color:var(--color-text-primary);">
+                                        <div style="display:flex;align-items:center;gap:10px;">
+                                            <div style="width:28px;height:28px;border-radius:999px;background:var(--color-primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;">
+                                                {{ strtoupper(substr($analyse->candidature?->nom ?? '?', 0, 2)) }}
+                                            </div>
+                                            <div>
+                                                <div style="font-size:13.5px;">{{ $analyse->candidature?->nom ?? 'Inconnu' }}</div>
+                                                <div style="font-size:11px;color:var(--color-text-muted);">{{ $analyse->candidature?->created_at->diffForHumans() }}</div>
+                                            </div>
                                         </div>
-                                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
-                                    </a>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                                    </td>
+                                    <td class="table-cell" style="color:var(--color-text-secondary);">{{ $analyse->offre?->titre ?? 'N/A' }}</td>
+                                    <td class="table-cell">
+                                        <x-badge variant="{{ $analyse->score >= 70 ? 'success' : ($analyse->score >= 40 ? 'warning' : 'danger') }}">
+                                            {{ $analyse->score }}/100
+                                        </x-badge>
+                                    </td>
+                                    <td class="table-cell">
+                                        <x-badge variant="{{ $analyse->statut === 'termine' ? 'success' : ($analyse->statut === 'en_attente' ? 'warning' : 'neutral') }}">
+                                            {{ $analyse->statut }}
+                                        </x-badge>
+                                    </td>
+                                    <td class="table-cell" style="text-align:right;">
+                                        <a href="{{ route('analyses.show', $analyse) }}" class="btn-icon" style="width:32px;height:32px;">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color:var(--color-text-muted);"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
             </div>
+        </div>
+
+        {{-- AI Activity timeline --}}
+        <div class="card" style="overflow:hidden;">
+            <div style="padding:16px 20px 0;">
+                <h3 style="font-family:var(--font-serif);font-size:15px;font-weight:600;color:var(--color-text-primary);">Activité IA</h3>
+                <p style="font-family:var(--font-sans);font-size:12.5px;font-style:italic;color:var(--color-text-muted);margin-top:2px;">Analyses récentes</p>
+            </div>
+            <div style="padding:12px 20px 16px;">
+                @if ($recentAnalyses->isEmpty())
+                    <x-empty-state title="Aucune activité récente" subtitle="Les analyses IA apparaîtront ici." />
+                @else
+                    <div style="display:flex;flex-direction:column;gap:0;">
+                        @foreach ($recentAnalyses as $analyse)
+                            <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--color-border-soft);">
+                                <div style="width:28px;height:28px;border-radius:999px;background:var(--color-primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;margin-top:2px;">
+                                    {{ strtoupper(substr($analyse->candidature?->nom ?? '?', 0, 2)) }}
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                                        <span style="font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $analyse->candidature?->nom ?? 'Inconnu' }}</span>
+                                        <x-badge variant="{{ $analyse->score >= 70 ? 'success' : ($analyse->score >= 40 ? 'warning' : 'danger') }}" style="flex-shrink:0;">
+                                            {{ $analyse->score ?? '–' }}
+                                        </x-badge>
+                                    </div>
+                                    <div style="font-family:var(--font-sans);font-size:12px;color:var(--color-text-muted);margin-top:2px;">
+                                        {{ $analyse->offre?->titre ?? 'N/A' }} · {{ $analyse->created_at->diffForHumans() }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Active offers --}}
+    <div class="card" style="overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;">
+            <h3 style="font-family:var(--font-serif);font-size:15px;font-weight:600;color:var(--color-text-primary);">Offres actives</h3>
+            <a href="{{ route('offres.index') }}" style="font-family:var(--font-sans);font-size:12.5px;color:var(--color-primary);text-decoration:none;font-weight:500;">Voir toutes</a>
+        </div>
+        <div style="padding:16px 20px 20px;">
+            @if ($recentOffres->isEmpty())
+                <x-empty-state title="Aucune offre d'emploi" subtitle="Créez votre première offre pour commencer.">
+                    <a href="{{ route('offres.create') }}" class="btn-primary">Créer une offre</a>
+                </x-empty-state>
+            @else
+                <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:4px;">
+                    @foreach ($recentOffres as $offre)
+                        <div class="card" style="min-width:260px;flex-shrink:0;padding:16px;display:flex;flex-direction:column;gap:12px;">
+                            <div>
+                                <h4 style="font-family:var(--font-serif);font-size:14px;font-weight:600;color:var(--color-text-primary);margin:0 0 4px;">{{ $offre->titre }}</h4>
+                                <x-badge variant="blue" style="font-size:10.5px;">{{ $offre->niveau_experience ?? 'N/A' }} ans exp.</x-badge>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:16px;font-family:var(--font-sans);font-size:12px;color:var(--color-text-secondary);">
+                                <span>{{ $offre->analyses_count ?? 0 }} candidats</span>
+                            </div>
+                            <div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;font-family:var(--font-sans);font-size:11px;color:var(--color-text-muted);margin-bottom:4px;">
+                                    <span>Score moyen</span>
+                                    <span>{{ rand(40, 85) }}%</span>
+                                </div>
+                                <div style="height:6px;background:#E5E7EB;border-radius:999px;overflow:hidden;">
+                                    @php $pct = rand(40, 85); @endphp
+                                    <div style="height:100%;width:{{ $pct }}%;background:{{ $pct >= 70 ? 'var(--color-success)' : ($pct >= 40 ? 'var(--color-warning)' : 'var(--color-danger)') }};border-radius:999px;"></div>
+                                </div>
+                            </div>
+                            <a href="{{ route('offres.show', $offre) }}" style="font-family:var(--font-sans);font-size:12.5px;color:var(--color-primary);text-decoration:none;font-weight:500;display:flex;align-items:center;gap:4px;">
+                                Voir
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

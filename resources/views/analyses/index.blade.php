@@ -1,75 +1,69 @@
-@extends('layouts.app')
+<x-app-layout>
+    @section('title', 'Analyses')
 
-@section('content')
-<div class="max-w-7xl mx-auto">
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">Analyses</h1>
-        <p class="mt-1.5 text-sm text-gray-500">AI-powered CV evaluations</p>
-    </div>
+    <x-slot name="header">Analyses</x-slot>
+    <x-slot name="subtitle">Évaluations de CV par IA</x-slot>
 
-    <div class="flex items-center gap-2 mb-6">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
         @php $activeReco = request('recommandation'); @endphp
-        <a href="{{ route('analyses.index') }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition {{ !$activeReco ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
-            All
+        <a href="{{ route('analyses.index') }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition"
+            style="background:{{ !$activeReco ? 'var(--color-primary)' : 'var(--color-border-soft)' }};color:{{ !$activeReco ? '#fff' : 'var(--color-text-secondary)' }};font-family:var(--font-sans);text-decoration:none;">
+            Toutes
         </a>
-        <a href="{{ route('analyses.index', ['recommandation' => 'convoquer']) }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition {{ $activeReco === 'convoquer' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+        <a href="{{ route('analyses.index', ['recommandation' => 'convoquer']) }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition"
+            style="background:{{ $activeReco === 'convoquer' ? 'var(--color-success)' : 'var(--color-border-soft)' }};color:{{ $activeReco === 'convoquer' ? '#fff' : 'var(--color-text-secondary)' }};font-family:var(--font-sans);text-decoration:none;">
             À convoquer
         </a>
-        <a href="{{ route('analyses.index', ['recommandation' => 'attente']) }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition {{ $activeReco === 'attente' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+        <a href="{{ route('analyses.index', ['recommandation' => 'attente']) }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition"
+            style="background:{{ $activeReco === 'attente' ? 'var(--color-warning)' : 'var(--color-border-soft)' }};color:{{ $activeReco === 'attente' ? '#fff' : 'var(--color-text-secondary)' }};font-family:var(--font-sans);text-decoration:none;">
             En attente
         </a>
-        <a href="{{ route('analyses.index', ['recommandation' => 'rejeter']) }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition {{ $activeReco === 'rejeter' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+        <a href="{{ route('analyses.index', ['recommandation' => 'rejeter']) }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition"
+            style="background:{{ $activeReco === 'rejeter' ? 'var(--color-danger)' : 'var(--color-border-soft)' }};color:{{ $activeReco === 'rejeter' ? '#fff' : 'var(--color-text-secondary)' }};font-family:var(--font-sans);text-decoration:none;">
             À rejeter
         </a>
     </div>
 
     @if ($analyses->isEmpty())
-        <div class="card p-12 text-center">
-            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">No analyses yet</h3>
-            <p class="text-gray-500">Analyses will appear once candidates submit their CVs and evaluations are completed.</p>
+        <div class="card">
+            <x-empty-state title="Aucune analyse pour le moment" subtitle="Les analyses apparaîtront une fois les CV soumis et évalués." />
         </div>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
             @foreach ($analyses as $analyse)
                 @php
-                    $borderColors = ['convoquer' => 'border-l-green-500', 'attente' => 'border-l-amber-500', 'rejeter' => 'border-l-red-500'];
-                    $scoreColors = $analyse->score >= 70 ? 'text-green-600' : ($analyse->score >= 40 ? 'text-amber-600' : 'text-red-600');
-                    $recoColors = ['convoquer' => 'badge-green', 'attente' => 'badge-amber', 'rejeter' => 'badge-red'];
-                    $recoLabels = ['convoquer' => 'À convoquer', 'attente' => 'En attente', 'rejeter' => 'À rejeter'];
+                    $borderColor = $analyse->recommandation?->value === 'convoquer' ? 'var(--color-success)' : ($analyse->recommandation?->value === 'attente' ? 'var(--color-warning)' : ($analyse->recommandation?->value === 'rejeter' ? 'var(--color-danger)' : 'var(--color-border)'));
                 @endphp
-                <div class="card p-6 border-l-4 {{ $borderColors[$analyse->recommandation?->value] ?? 'border-l-gray-300' }}">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                <div class="card" style="padding:20px;border-left:4px solid {{ $borderColor }};display:flex;flex-direction:column;gap:16px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:36px;height:36px;border-radius:999px;background:var(--color-primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">
                             {{ strtoupper(substr($analyse->candidature?->nom ?? '?', 0, 2)) }}
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-gray-900 truncate">{{ $analyse->candidature?->nom ?? 'Unknown' }}</p>
-                            <p class="text-xs text-gray-500 truncate">{{ $analyse->offre?->titre }}</p>
+                        <div style="flex:1;min-width:0;">
+                            <p style="font-family:var(--font-serif);font-size:14px;font-weight:600;color:var(--color-text-primary);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $analyse->candidature?->nom ?? 'Inconnu' }}</p>
+                            <p style="font-family:var(--font-sans);font-size:12px;color:var(--color-text-muted);margin:0;">{{ $analyse->offre?->titre }}</p>
                         </div>
                     </div>
 
-                    <div class="flex items-end justify-between mb-4">
+                    <div style="display:flex;align-items:flex-end;justify-content:space-between;">
                         <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Score</p>
-                            <p class="text-3xl font-bold {{ $scoreColors }}">{{ $analyse->score ?? '—' }}</p>
+                            <p style="font-family:var(--font-sans);font-size:11px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;margin:0 0 4px;">Score</p>
+                            <p style="font-family:var(--font-serif);font-size:24px;font-weight:600;color:{{ $analyse->score >= 70 ? 'var(--color-success)' : ($analyse->score >= 40 ? 'var(--color-warning)' : 'var(--color-danger)') }};margin:0;">{{ $analyse->score ?? '—' }}</p>
                         </div>
                         @if ($analyse->recommandation)
-                            <span class="{{ $recoColors[$analyse->recommandation->value] ?? 'badge' }}">
-                                {{ $recoLabels[$analyse->recommandation->value] ?? '—' }}
-                            </span>
+                            <x-badge variant="{{ $analyse->recommandation->value === 'convoquer' ? 'success' : ($analyse->recommandation->value === 'attente' ? 'warning' : 'danger') }}">
+                                {{ match($analyse->recommandation->value) { 'convoquer' => 'À convoquer', 'attente' => 'En attente', 'rejeter' => 'À rejeter', default => '—' } }}
+                            </x-badge>
                         @endif
                     </div>
 
-                    <div class="flex items-center gap-2 pt-4 border-t border-gray-100">
-                        <a href="{{ route('analyses.show', $analyse) }}" class="btn-primary flex-1 justify-center text-xs px-3 py-2">
-                            View Details
+                    <div style="display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid var(--color-border-soft);">
+                        <a href="{{ route('analyses.show', $analyse) }}" class="btn-primary" style="flex:1;font-size:12px;padding:8px 16px;">
+                            Voir les détails
                         </a>
-                        <form action="{{ route('conversations.store', $analyse) }}" method="POST" class="inline">
+                        <form action="{{ route('conversations.store', $analyse) }}" method="POST" style="display:inline;">
                             @csrf
-                            <button type="submit" class="btn-secondary px-3 py-2 text-xs" title="Chat">
+                            <button type="submit" class="btn-secondary" style="font-size:12px;padding:8px 14px;">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                                 </svg>
@@ -81,9 +75,10 @@
             @endforeach
         </div>
 
-        <div class="mt-6">
-            {{ $analyses->links() }}
-        </div>
+        @if ($analyses->hasPages())
+            <div style="margin-top:24px;display:flex;justify-content:center;">
+                {{ $analyses->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
     @endif
-</div>
-@endsection
+</x-app-layout>
