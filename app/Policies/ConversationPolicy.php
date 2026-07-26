@@ -2,19 +2,19 @@
 
 namespace App\Policies;
 
-use App\Models\Analyse;
+use App\Models\Conversation;
 use App\Models\User;
 
-class AnalysePolicy
+class ConversationPolicy
 {
     public function viewAny(User $user): bool
     {
         return true;
     }
 
-    public function view(User $user, Analyse $analyse): bool
+    public function view(User $user, Conversation $conversation): bool
     {
-        return $user->id === $analyse->offre->user_id;
+        return $user->id === $conversation->analyse->offre->user_id;
     }
 
     public function create(User $user): bool

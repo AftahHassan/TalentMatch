@@ -10,6 +10,8 @@ class OffreController extends Controller
 {
     public function index()
     {
+        Gate::authorize('viewAny', Offre::class);
+
         $offres = request()->user()->offres()->latest()->get();
 
         return view('offres.index', compact('offres'));
@@ -17,11 +19,15 @@ class OffreController extends Controller
 
     public function create()
     {
+        Gate::authorize('create', Offre::class);
+
         return view('offres.create');
     }
 
     public function store(Request $request)
     {
+        Gate::authorize('create', Offre::class);
+
         $validated = $request->validate([
             'titre' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
@@ -52,16 +58,22 @@ class OffreController extends Controller
 
     public function edit(Offre $offre)
     {
+        Gate::authorize('update', $offre);
+
         //
     }
 
     public function update(Request $request, Offre $offre)
     {
+        Gate::authorize('update', $offre);
+
         //
     }
 
     public function destroy(Offre $offre)
     {
+        Gate::authorize('delete', $offre);
+
         //
     }
 }

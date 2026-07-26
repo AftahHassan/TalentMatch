@@ -24,14 +24,12 @@
 <body style="background:var(--color-bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;">
 
     <div style="width:100%;max-width:420px;">
-        {{-- Card --}}
         <div style="background:var(--color-surface);
                     border-radius:var(--radius-2xl);
                     border:1px solid var(--color-border);
                     box-shadow:var(--shadow-lg);
                     padding:40px 36px 32px;">
 
-            {{-- Logo --}}
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
                 <div style="width:34px;height:34px;border-radius:10px;background:var(--color-primary);
                             display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -49,15 +47,14 @@
                 {{ $subtitle }}
             </p>
 
-            {{-- Tab switcher --}}
             <div class="auth-tabs">
                 <a href="{{ route('login') }}"
                    class="auth-tab {{ request()->routeIs('login') ? 'active' : '' }}">
-                    Log in
+                    Connexion
                 </a>
                 <a href="{{ route('register') }}"
                    class="auth-tab {{ request()->routeIs('register') ? 'active' : '' }}">
-                    Sign up
+                    Inscription
                 </a>
             </div>
 

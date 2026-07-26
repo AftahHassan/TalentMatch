@@ -7,7 +7,7 @@ use App\Models\User;
 
 class OffrePolicy
 {
-    public function create(User $user): bool
+    public function viewAny(User $user): bool
     {
         return true;
     }
@@ -15,6 +15,11 @@ class OffrePolicy
     public function view(User $user, Offre $offre): bool
     {
         return $user->id === $offre->user_id;
+    }
+
+    public function create(User $user): bool
+    {
+        return true;
     }
 
     public function update(User $user, Offre $offre): bool

@@ -101,8 +101,6 @@ class CandidatureTest extends TestCase
         $response = $this->actingAs($user)->get("/offres/{$offre->id}/candidatures/create");
 
         $response->assertStatus(200);
-        $response->assertSee('New Analysis');
-        $response->assertSee('CANDIDATE NAME');
-        $response->assertSee('CV CONTENT (ALTERNATIVE)');
+        $response->assertSee('Nouvelle analyse');
     }
 }

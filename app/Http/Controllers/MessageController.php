@@ -17,7 +17,7 @@ class MessageController extends Controller
 {
     public function store(Request $request, Conversation $conversation): JsonResponse
     {
-        Gate::authorize('view', $conversation->analyse);
+        Gate::authorize('view', $conversation);
 
         $validated = $request->validate([
             'contenu' => 'required|string',

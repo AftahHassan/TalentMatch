@@ -41,7 +41,7 @@ class ConversationController extends Controller
 
     public function show(Conversation $conversation)
     {
-        Gate::authorize('view', $conversation->analyse);
+        Gate::authorize('view', $conversation);
 
         $conversation->load(['messages', 'analyse.candidature']);
 

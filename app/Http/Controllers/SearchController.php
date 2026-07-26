@@ -19,16 +19,19 @@ class SearchController extends Controller
                 ->where('titre', 'like', "%{$query}%")
                 ->take(5)->get()
                 ->map(fn ($o) => [
-                    'type' => 'Job Offer',
+                    'type' => 'Offre d\'emploi',
                     'title' => $o->titre,
                     'url' => route('offres.show', $o),
                     'icon' => 'briefcase',
                 ]);
 
-            $candidatures = Candidature::where('nom', 'like', "%{$query}%")
+            $candidatures = Candidature::whereHas('analyse.offre', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
+                ->where('nom', 'like', "%{$query}%")
                 ->take(5)->get()
                 ->map(fn ($c) => [
-                    'type' => 'Candidate',
+                    'type' => 'Candidat',
                     'title' => $c->nom,
                     'url' => $c->analyse ? route('analyses.show', $c->analyse) : '#',
                     'icon' => 'user',

@@ -22,8 +22,8 @@
         <div style="display:flex;flex-direction:column;gap:8px;">
             @foreach ($results as $result)
                 <div class="card" style="padding:16px;display:flex;align-items:center;gap:16px;">
-                    <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:{{ $result['type'] === 'Job Offer' ? 'var(--color-primary-light)' : 'var(--color-success-bg)' }};">
-                        @if ($result['type'] === 'Job Offer')
+                    <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:{{ $result['type'] === 'Offre d\'emploi' ? 'var(--color-primary-light)' : 'var(--color-success-bg)' }};">
+                        @if ($result['type'] === 'Offre d\'emploi')
                             <svg class="w-5 h-5" style="color:var(--color-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 13.255A23.193 23.193 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         @else
                             <svg class="w-5 h-5" style="color:var(--color-success-text);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
