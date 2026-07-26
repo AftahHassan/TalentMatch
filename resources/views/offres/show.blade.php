@@ -1,138 +1,131 @@
 <x-app-layout>
-    <x-slot name="header">{{ $offre->titre }}</x-slot>
-
-    <div class="max-w-7xl mx-auto space-y-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ $offre->titre }}</h1>
-                <p class="text-sm text-gray-500 mt-1">{{ __('Job Offer Details') }}</p>
-            </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <div>
+            <h1 style="font-size:20px;font-weight:600;color:var(--color-text-primary);margin:0 0 4px;">{{ $offre->titre }}</h1>
+            <p style="font-size:13px;color:var(--color-text-secondary);margin:0;">Détails de l'offre d'emploi</p>
+        </div>
+        <div style="display:flex;gap:8px;">
             <a href="{{ route('offres.edit', $offre) }}" class="btn-secondary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                {{ __('Edit') }}
+                Modifier
+            </a>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;">
+        <div class="card" style="padding:24px 28px;">
+            <div class="section-label" style="margin-bottom:12px;">Description</div>
+            <p style="font-size:14px;color:var(--color-text-secondary);line-height:1.7;margin:0;">{{ $offre->description }}</p>
+        </div>
+
+        <div class="card" style="padding:24px 28px;">
+            <div class="section-label" style="margin-bottom:16px;">Détails</div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div>
+                    <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-muted);margin:0 0 4px;">Expérience requise</p>
+                    <p style="font-size:16px;font-weight:600;color:var(--color-text-primary);margin:0;">{{ $offre->niveau_experience }} ans</p>
+                </div>
+                <div>
+                    <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-muted);margin:0 0 8px;">Compétences requises</p>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                        @foreach ($offre->competences_requises as $competence)
+                            <span class="badge badge-blue">{{ $competence }}</span>
+                        @endforeach
+                    </div>
+                </div>
+                <div>
+                    <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-muted);margin:0 0 4px;">Date de création</p>
+                    <p style="font-size:14px;color:var(--color-text-secondary);margin:0;">{{ $offre->created_at->format('d F Y') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px 16px;border-bottom:1px solid var(--color-border);">
+            <div>
+                <h3 style="font-size:15px;font-weight:600;color:var(--color-text-primary);margin:0 0 2px;">Candidatures</h3>
+                <p style="font-size:12px;color:var(--color-text-secondary);margin:0;">{{ $offre->analyses->count() }} candidature(s) reçue(s)</p>
+            </div>
+            <a href="{{ route('candidatures.create', $offre) }}" class="btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                Soumettre un CV
             </a>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 card p-8">
-                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{{ __('Description') }}</h3>
-                <p class="text-gray-700 leading-relaxed">{{ $offre->description }}</p>
+        @if ($offre->analyses->isEmpty())
+            <div style="padding:40px 24px;text-align:center;">
+                <svg class="w-14 h-14" style="color:var(--color-text-muted);margin:0 auto 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p style="font-size:14px;font-weight:500;color:var(--color-text-secondary);margin:0 0 4px;">Aucune candidature pour le moment.</p>
+                <p style="font-size:12px;color:var(--color-text-muted);margin:0;">Soumettez un CV pour démarrer l'analyse par IA.</p>
             </div>
-
-            <div class="card p-8">
-                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{{ __('Details') }}</h3>
-                <div class="space-y-5">
-                    <div>
-                        <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Experience Required') }}</p>
-                        <p class="text-lg font-semibold text-gray-900 mt-1">{{ $offre->niveau_experience }} {{ __('years') }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Required Skills') }}</p>
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            @foreach ($offre->competences_requises as $competence)
-                                <span class="badge-blue">{{ $competence }}</span>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-400 uppercase tracking-wider">{{ __('Created Date') }}</p>
-                        <p class="text-sm text-gray-700 mt-1">{{ $offre->created_at->format('d F Y') }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between">
-                <div>
-                    <h3 class="font-semibold text-gray-900">{{ __('Candidatures') }}</h3>
-                    <p class="text-sm text-gray-500">{{ $offre->analyses->count() }} {{ __('candidature(s) received') }}</p>
-                </div>
-                <a href="{{ route('candidatures.create', $offre) }}" class="btn-primary">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    {{ __('Submit New CV') }}
-                </a>
-            </div>
-
-            @if ($offre->analyses->isEmpty())
-                <div class="p-12 text-center">
-                    <svg class="w-14 h-14 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    <p class="text-gray-500 font-medium">{{ __('No candidatures yet.') }}</p>
-                    <p class="text-sm text-gray-400 mt-1">{{ __('Submit a CV to get started with AI-powered analysis.') }}</p>
-                </div>
-            @else
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-100">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="px-8 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ __('Candidate') }}</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ __('Score') }}</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ __('Status') }}</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ __('Recommendation') }}</th>
-                                <th class="px-6 py-4"></th>
+        @else
+            <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Candidat</th>
+                            <th class="table-header">Score</th>
+                            <th class="table-header">Statut</th>
+                            <th class="table-header">Recommandation</th>
+                            <th class="table-header" style="width:40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($offre->analyses->sortByDesc('score') as $analyse)
+                            <tr>
+                                <td class="table-cell">
+                                    <div style="display:flex;align-items:center;gap:9px;">
+                                        <div style="width:28px;height:28px;border-radius:999px;background:var(--color-accent-light);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--color-accent);flex-shrink:0;">{{ substr($analyse->candidature?->nom ?? 'NA', 0, 2) }}</div>
+                                        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary);">{{ $analyse->candidature?->nom ?? 'N/A' }}</span>
+                                    </div>
+                                </td>
+                                <td class="table-cell">
+                                    @if ($analyse->score !== null)
+                                        <x-badge variant="{{ $analyse->score >= 70 ? 'success' : ($analyse->score >= 40 ? 'warning' : 'danger') }}">{{ $analyse->score }}</x-badge>
+                                    @else
+                                        <span style="color:var(--color-text-muted);">—</span>
+                                    @endif
+                                </td>
+                                <td class="table-cell">
+                                    @if ($analyse->statut === 'en_attente')
+                                        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#a16207;"><span style="width:6px;height:6px;border-radius:999px;background:#eab308;"></span>En attente</span>
+                                    @else
+                                        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--color-success-text);"><span style="width:6px;height:6px;border-radius:999px;background:var(--color-success);"></span>Terminé</span>
+                                    @endif
+                                </td>
+                                <td class="table-cell">
+                                    @php
+                                        $badgeVariant = match($analyse->recommandation?->value) {
+                                            'convoquer' => 'success',
+                                            'attente' => 'warning',
+                                            'rejeter' => 'danger',
+                                            default => 'neutral'
+                                        };
+                                        $recoLabel = match($analyse->recommandation?->value) {
+                                            'convoquer' => 'À convoquer',
+                                            'attente' => 'En attente',
+                                            'rejeter' => 'Rejeter',
+                                            default => '—'
+                                        };
+                                    @endphp
+                                    <x-badge variant="{{ $badgeVariant }}">{{ $recoLabel }}</x-badge>
+                                </td>
+                                <td class="table-cell" style="text-align:right;">
+                                    <a href="{{ route('analyses.show', $analyse) }}" style="font-size:12px;color:var(--color-accent);text-decoration:none;font-weight:600;">Voir →</a>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach ($offre->analyses->sortByDesc('score') as $analyse)
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-8 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-full bg-brand-600/10 flex items-center justify-center text-sm font-semibold text-brand-600">
-                                                {{ substr($analyse->candidature?->nom ?? 'NA', 0, 2) }}
-                                            </div>
-                                            <span class="font-medium text-gray-900">{{ $analyse->candidature?->nom ?? 'N/A' }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        @if ($analyse->score !== null)
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $analyse->score >= 70 ? 'badge-green' : ($analyse->score >= 40 ? 'badge-amber' : 'badge-red') }}">
-                                                {{ $analyse->score }}
-                                            </span>
-                                        @else
-                                            <span class="text-gray-400">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        @if ($analyse->statut === 'en_attente')
-                                            <span class="inline-flex items-center gap-1.5 text-sm text-yellow-700">
-                                                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
-                                                {{ __('Pending') }}
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1.5 text-sm text-green-700 font-medium">
-                                                <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                                {{ __('Done') }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        @php
-                                            $badgeColors = [
-                                                'convoquer' => 'badge-green',
-                                                'attente' => 'badge-amber',
-                                                'rejeter' => 'badge-red',
-                                            ];
-                                        @endphp
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $badgeColors[$analyse->recommandation?->value] ?? 'bg-gray-50 text-gray-600' }}">
-                                            {{ match($analyse->recommandation?->value) { 'convoquer' => __('To interview'), 'attente' => __('On hold'), 'rejeter' => __('Reject'), default => '—' } }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('analyses.show', $analyse) }}" class="text-brand-600 hover:text-brand-700 font-medium text-sm">
-                                            {{ __('View Analysis') }} &rarr;
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
 
-        <a href="{{ route('offres.index') }}" class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 font-medium gap-1.5">
+    <div style="margin-top:24px;">
+        <a href="{{ route('offres.index') }}" style="font-size:13px;color:var(--color-accent);text-decoration:none;font-weight:500;display:flex;align-items:center;gap:6px;">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            {{ __('Back to Job Offers') }}
+            Retour aux offres
         </a>
     </div>
 </x-app-layout>

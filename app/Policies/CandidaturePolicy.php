@@ -2,19 +2,20 @@
 
 namespace App\Policies;
 
-use App\Models\Analyse;
+use App\Models\Candidature;
 use App\Models\User;
 
-class AnalysePolicy
+class CandidaturePolicy
 {
     public function viewAny(User $user): bool
     {
         return true;
     }
 
-    public function view(User $user, Analyse $analyse): bool
+    public function view(User $user, Candidature $candidature): bool
     {
-        return $user->id === $analyse->offre->user_id;
+        return $candidature->analyse
+            && $user->id === $candidature->analyse->offre->user_id;
     }
 
     public function create(User $user): bool

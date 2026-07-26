@@ -11,6 +11,9 @@ class AnalyseController extends Controller
     public function index(): View
     {
         $analyses = Analyse::with(['candidature', 'offre'])
+            ->whereHas('offre', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->where('statut', 'termine')
             ->latest()
             ->paginate(15);

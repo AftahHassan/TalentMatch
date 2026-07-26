@@ -15,7 +15,10 @@ class CandidatureController extends Controller
 {
     public function index(): View
     {
-        $candidatures = Candidature::with('analyse.offre')
+        $candidatures = Candidature::whereHas('analyse.offre', function ($q) {
+            $q->where('user_id', auth()->id());
+        })
+            ->with('analyse.offre')
             ->latest()
             ->paginate(15);
 
